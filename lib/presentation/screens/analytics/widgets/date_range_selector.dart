@@ -256,12 +256,13 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.destructive,
+        description: Text(message),
       ),
     );
+  
   }
 
   // Normalize dates to start/end of day

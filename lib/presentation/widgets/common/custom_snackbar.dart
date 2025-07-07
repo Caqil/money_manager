@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/colors.dart';
@@ -115,9 +116,10 @@ class CustomSnackBar extends StatelessWidget {
     BorderRadius? borderRadius,
     bool showCloseIcon = false,
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Row(
           children: [
             if (icon != null) ...[
               icon,
@@ -137,18 +139,6 @@ class CustomSnackBar extends StatelessWidget {
         backgroundColor:
             backgroundColor ?? Theme.of(context).colorScheme.inverseSurface,
         duration: duration ?? const Duration(seconds: 4),
-        behavior: behavior,
-        margin: margin ?? const EdgeInsets.all(AppDimensions.paddingM),
-        padding: padding ??
-            const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingM,
-              vertical: AppDimensions.paddingS,
-            ),
-        elevation: elevation ?? AppDimensions.elevationM,
-        shape: RoundedRectangleBorder(
-          borderRadius:
-              borderRadius ?? BorderRadius.circular(AppDimensions.radiusM),
-        ),
         action: actionLabel != null
             ? SnackBarAction(
                 label: actionLabel,
@@ -159,8 +149,6 @@ class CustomSnackBar extends StatelessWidget {
                 textColor: textColor ?? Colors.white,
               )
             : null,
-        showCloseIcon: showCloseIcon,
-        dismissDirection: DismissDirection.horizontal,
       ),
     );
   }

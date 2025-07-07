@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/budget.dart';
 import '../../data/repositories/budget_repository.dart';
-import '../../core/enums/budget_period.dart';
 
 // Repository provider
 final budgetRepositoryProvider = Provider<BudgetRepository>(
@@ -106,54 +105,12 @@ class BudgetNotifier extends StateNotifier<AsyncValue<List<Budget>>> {
     loadBudgets();
   }
 
-  // Load all budgets
-  Future<void> loadBudgets() async {
-    try {
-      state = const AsyncValue.loading();
-      final budgets = await _repository.getAllBudgets();
-      state = AsyncValue.data(budgets);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+  void _safeSetState(AsyncValue<List<Budget>> newState) {
+    if (mounted) {
+      state = newState;
     }
-  }
+  } // Toggle budget status
 
-  // Add budget
-  Future<String?> addBudget(Budget budget) async {
-    try {
-      final id = await _repository.addBudget(budget);
-      await loadBudgets(); // Refresh list
-      return id;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return null;
-    }
-  }
-
-  // Update budget
-  Future<bool> updateBudget(Budget budget) async {
-    try {
-      await _repository.updateBudget(budget);
-      await loadBudgets(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Delete budget
-  Future<bool> deleteBudget(String id) async {
-    try {
-      await _repository.deleteBudget(id);
-      await loadBudgets(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Toggle budget status
   Future<bool> toggleBudgetStatus(String id, bool isActive) async {
     try {
       if (isActive) {
@@ -169,9 +126,59 @@ class BudgetNotifier extends StateNotifier<AsyncValue<List<Budget>>> {
     }
   }
 
-  // Refresh budgets
-  Future<void> refresh() async {
-    await loadBudgets();
+  Future<void> loadBudgets() async {
+    try {
+      _safeSetState(const AsyncValue.loading());
+      final budgets = await _repository.getAllBudgets();
+      _safeSetState(AsyncValue.data(budgets));
+    } catch (error, stackTrace) {
+      _safeSetState(AsyncValue.error(error, stackTrace));
+    }
+  }
+
+  Future<String?> addBudget(Budget budget) async {
+    if (!mounted) return null;
+
+    try {
+      final id = await _repository.addBudget(budget);
+      if (mounted) {
+        await loadBudgets();
+      }
+      return id;
+    } catch (error, stackTrace) {
+      _safeSetState(AsyncValue.error(error, stackTrace));
+      return null;
+    }
+  }
+
+  Future<bool> updateBudget(Budget budget) async {
+    if (!mounted) return false;
+
+    try {
+      await _repository.updateBudget(budget);
+      if (mounted) {
+        await loadBudgets();
+      }
+      return true;
+    } catch (error, stackTrace) {
+      _safeSetState(AsyncValue.error(error, stackTrace));
+      return false;
+    }
+  }
+
+  Future<bool> deleteBudget(String id) async {
+    if (!mounted) return false;
+
+    try {
+      await _repository.deleteBudget(id);
+      if (mounted) {
+        await loadBudgets();
+      }
+      return true;
+    } catch (error, stackTrace) {
+      _safeSetState(AsyncValue.error(error, stackTrace));
+      return false;
+    }
   }
 }
 

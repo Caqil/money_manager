@@ -8,7 +8,6 @@ import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
 import '../../../../data/models/budget.dart';
-import '../../../../presentation/providers/analytics_provider.dart';
 import '../../../../presentation/providers/category_provider.dart';
 
 class BudgetItem extends ConsumerStatefulWidget {

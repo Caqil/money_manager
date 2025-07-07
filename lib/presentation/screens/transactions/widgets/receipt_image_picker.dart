@@ -445,14 +445,13 @@ class _ReceiptImagePickerState extends State<ReceiptImagePicker> {
   void _showError(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
         backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+        
+        
       ),
     );
   }

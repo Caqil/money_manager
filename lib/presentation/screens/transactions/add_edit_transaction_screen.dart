@@ -13,7 +13,6 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
-import '../../widgets/common/custom_dialog.dart';
 import 'widgets/transaction_form.dart';
 
 class AddEditTransactionScreen extends ConsumerStatefulWidget {
@@ -465,14 +464,12 @@ ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
   void _showSuccessAndNavigateBack(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
         backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+       
       ),
     );
 
@@ -482,14 +479,12 @@ ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
   void _showError(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
         backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+       
       ),
     );
   }

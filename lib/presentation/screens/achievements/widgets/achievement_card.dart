@@ -80,7 +80,6 @@ class _AchievementCardState extends ConsumerState<AchievementCard>
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final badgesAsync = _getBadgesProvider();
 
     return AnimatedBuilder(

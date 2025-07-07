@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/dimensions.dart';
 
 /// A widget that provides slide animation for its child
 class SlideAnimation extends StatefulWidget {

@@ -129,10 +129,10 @@ class _BudgetFormState extends ConsumerState<BudgetForm> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.destructive,
+        description: Text(message),
       ),
     );
   }
@@ -154,8 +154,9 @@ class _BudgetFormState extends ConsumerState<BudgetForm> {
             placeholder: 'budgets.enterBudgetName'.tr(),
             enabled: widget.enabled && !widget.isLoading,
             required: true,
-            validator: (value) =>
-                ValidationHelper.getNameErrorMessage(value ?? '', fieldName: 'Name'),
+            validator: (value) => ValidationHelper.getNameErrorMessage(
+                value ?? '',
+                fieldName: 'Name'),
             textInputAction: TextInputAction.next,
           ),
 

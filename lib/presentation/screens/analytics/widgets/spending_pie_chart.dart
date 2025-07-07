@@ -40,7 +40,6 @@ class _SpendingPieChartState extends ConsumerState<SpendingPieChart> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final spendingAsync =
         ref.watch(spendingByCategoryProvider(widget.dateRange));
 

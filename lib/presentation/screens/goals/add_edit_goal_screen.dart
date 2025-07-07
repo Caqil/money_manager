@@ -168,10 +168,10 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.goalUpdated'.tr()),
-              backgroundColor: AppColors.success,
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.goalUpdated'.tr()),
             ),
           );
         }
@@ -204,10 +204,10 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.goalCreated'.tr()),
-              backgroundColor: AppColors.success,
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.goalCreated'.tr()),
             ),
           );
         }
@@ -220,12 +220,12 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEditing
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.destructive,
+            description: Text(isEditing
                 ? 'goals.updateError'.tr()
                 : 'goals.createError'.tr()),
-            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -276,24 +276,19 @@ class _AddEditGoalScreenState extends ConsumerState<AddEditGoalScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('goals.goalDeleted'.tr()),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        ShadSonner.of(context).show(ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('goals.goalDeleted'.tr()),
+        ));
         context.pop();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('goals.deleteError'.tr()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        ShadSonner.of(context).show(ShadToast.raw(
+          variant: ShadToastVariant.destructive,
+          description: Text('goals.deleteError'.tr()),
+        ));
       }
     }
   }
@@ -661,9 +656,10 @@ class _QuickGoalCreationScreenState
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('goals.goalCreated'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('goals.goalCreated'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -673,10 +669,10 @@ class _QuickGoalCreationScreenState
       if (mounted) {
         setState(() => _isLoading = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('goals.createError'.tr()),
-            backgroundColor: AppColors.error,
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('goals.createError'.tr()),
           ),
         );
       }

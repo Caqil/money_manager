@@ -312,10 +312,9 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
 
   void _showSuccessMessage(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.success,
+      ShadSonner.of(context).show(
+        ShadToast(
+          description: Text(message),
         ),
       );
     }
@@ -323,10 +322,9 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
 
   void _showErrorMessage(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
+      ShadSonner.of(context).show(
+        ShadToast(
+          description: Text(message),
         ),
       );
     }

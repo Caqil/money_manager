@@ -16,7 +16,6 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import 'widgets/budget_progress_card.dart';
 import 'widgets/budget_alert_widget.dart';
-import '../transactions/widgets/transaction_item.dart';
 
 class BudgetDetailScreen extends ConsumerStatefulWidget {
   final String budgetId;

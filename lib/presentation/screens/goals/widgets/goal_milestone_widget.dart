@@ -480,9 +480,10 @@ class _GoalMilestoneWidgetState extends ConsumerState<GoalMilestoneWidget> {
         widget.onGoalUpdated?.call(updatedGoal);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text(
                 milestone.isCompleted
                     ? 'goals.milestoneUncompleted'.tr()
                     : 'goals.milestoneCompleted'.tr(),
@@ -495,9 +496,10 @@ class _GoalMilestoneWidgetState extends ConsumerState<GoalMilestoneWidget> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('goals.milestoneUpdateError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('goals.milestoneUpdateError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );
@@ -535,18 +537,20 @@ class _GoalMilestoneWidgetState extends ConsumerState<GoalMilestoneWidget> {
         widget.onGoalUpdated?.call(updatedGoal);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.milestoneAdded'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.milestoneAdded'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.milestoneAddError'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.milestoneAddError'.tr()),
               backgroundColor: AppColors.error,
             ),
           );
@@ -576,8 +580,7 @@ class _GoalMilestoneWidgetState extends ConsumerState<GoalMilestoneWidget> {
         final updatedMilestones =
             List<GoalMilestone>.from(widget.goal.milestones ?? []);
         updatedMilestones[index] = updatedMilestone;
-        updatedMilestones
-            .sort((a, b) => a.amount.compareTo(b.amount));
+        updatedMilestones.sort((a, b) => a.amount.compareTo(b.amount));
 
         final updatedGoal = widget.goal.copyWith(
           milestones: updatedMilestones,
@@ -587,18 +590,20 @@ class _GoalMilestoneWidgetState extends ConsumerState<GoalMilestoneWidget> {
         widget.onGoalUpdated?.call(updatedGoal);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.milestoneUpdated'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.milestoneUpdated'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.milestoneUpdateError'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.milestoneUpdateError'.tr()),
               backgroundColor: AppColors.error,
             ),
           );
@@ -645,18 +650,20 @@ class _GoalMilestoneWidgetState extends ConsumerState<GoalMilestoneWidget> {
         widget.onGoalUpdated?.call(updatedGoal);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.milestoneDeleted'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.milestoneDeleted'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('goals.milestoneDeleteError'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('goals.milestoneDeleteError'.tr()),
               backgroundColor: AppColors.error,
             ),
           );

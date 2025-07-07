@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/dimensions.dart';
 
 /// A widget that provides scale animation for its child
 class ScaleAnimation extends StatefulWidget {

@@ -14,8 +14,6 @@ import '../services/hive_service.dart';
 import '../services/encryption_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/errors/exceptions.dart';
-import '../../core/errors/failures.dart';
-import '../../core/utils/date_utils.dart';
 
 class TransactionRepository {
   static const _uuid = Uuid();

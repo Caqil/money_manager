@@ -13,7 +13,6 @@ import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
-import '../../widgets/common/custom_dialog.dart';
 import 'widgets/category_form.dart';
 
 class AddEditCategoryScreen extends ConsumerStatefulWidget {
@@ -343,15 +342,10 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
 
   void _showSuccessAndNavigateBack(String message) {
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
       ),
     );
 
@@ -360,15 +354,10 @@ class _AddEditCategoryScreenState extends ConsumerState<AddEditCategoryScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.destructive,
+        description: Text(message),
       ),
     );
   }

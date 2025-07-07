@@ -3,7 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'app.dart';
 import 'core/constants/app_constants.dart';
@@ -17,7 +16,8 @@ import 'data/models/split_expense.dart';
 import 'data/models/badge.dart';
 import 'data/services/hive_service.dart';
 import 'data/services/notification_service.dart';
-import 'data/services/auth_service.dart'; // ADDED: Import AuthService
+import 'data/services/auth_service.dart';
+import 'data/services/settings_service.dart'; // ADD: Import SettingsService
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,8 +30,9 @@ void main() async {
   await HiveService.init();
   await NotificationService.init();
 
-  // CRITICAL: Initialize AuthService before running the app
+  // CRITICAL: Initialize both AuthService AND SettingsService before running the app
   await AuthService.init();
+  await SettingsService.init(); // ADD: Initialize SettingsService
 
   runApp(
     ProviderScope(

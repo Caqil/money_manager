@@ -105,10 +105,9 @@ class _TransferFormState extends ConsumerState<TransferForm> {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
+      ShadSonner.of(context).show(
+        ShadToast(
+          description: Text(message),
         ),
       );
     }

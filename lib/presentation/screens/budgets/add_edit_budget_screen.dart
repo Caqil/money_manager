@@ -9,7 +9,6 @@ import '../../../core/constants/dimensions.dart';
 import '../../../data/models/budget.dart';
 import '../../providers/budget_provider.dart';
 import '../../widgets/common/loading_widget.dart';
-import '../../widgets/common/error_widget.dart';
 import 'widgets/budget_form.dart';
 
 class AddEditBudgetScreen extends ConsumerStatefulWidget {
@@ -473,19 +472,19 @@ class _AddEditBudgetScreenState extends ConsumerState<AddEditBudgetScreen> {
   }
 
   void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.success,
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
       ),
     );
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.destructive,
+        description: Text(message),
       ),
     );
   }

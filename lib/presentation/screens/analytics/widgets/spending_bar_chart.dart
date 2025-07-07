@@ -8,7 +8,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
 import '../../../../core/utils/currency_formatter.dart';
-import '../../../../data/models/category.dart';
 import '../../../../presentation/providers/analytics_provider.dart';
 import '../../../../presentation/providers/category_provider.dart';
 import '../../../widgets/common/loading_widget.dart';

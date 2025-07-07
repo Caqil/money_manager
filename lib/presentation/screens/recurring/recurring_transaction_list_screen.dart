@@ -10,20 +10,20 @@ import '../../../data/models/recurring_transaction.dart';
 import '../../../data/models/transaction.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_widget.dart';
-import '../../widgets/common/error_widget.dart';
-import '../../widgets/common/loading_widget.dart';
 import 'widgets/recurring_transaction_item.dart';
 
 // Note: You'll need to create this provider similar to your existing patterns
 // For now, I'll use placeholder provider names that should be implemented
-class RecurringTransactionListNotifier extends StateNotifier<AsyncValue<List<RecurringTransaction>>> {
+class RecurringTransactionListNotifier
+    extends StateNotifier<AsyncValue<List<RecurringTransaction>>> {
   RecurringTransactionListNotifier() : super(const AsyncValue.loading());
   // TODO: Implement actual logic
 }
 
-final recurringTransactionListProvider =
-    StateNotifierProvider<RecurringTransactionListNotifier, AsyncValue<List<RecurringTransaction>>>(
-        (ref) => RecurringTransactionListNotifier());
+final recurringTransactionListProvider = StateNotifierProvider<
+        RecurringTransactionListNotifier,
+        AsyncValue<List<RecurringTransaction>>>(
+    (ref) => RecurringTransactionListNotifier());
 
 class RecurringTransactionListScreen extends ConsumerStatefulWidget {
   final TransactionType? filterType;
@@ -398,18 +398,20 @@ class _RecurringTransactionListScreenState
       // await ref.read(recurringTransactionListProvider.notifier).deleteRecurringTransaction(recurringTransaction.id);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('recurring.transactionDeleted'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('recurring.transactionDeleted'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('recurring.deleteError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('recurring.deleteError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );
@@ -424,9 +426,10 @@ class _RecurringTransactionListScreenState
       // await ref.read(recurringTransactionListProvider.notifier).toggleRecurringTransactionStatus(recurringTransaction.id);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(recurringTransaction.isActive
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(recurringTransaction.isActive
                 ? 'recurring.transactionPaused'.tr()
                 : 'recurring.transactionResumed'.tr()),
             backgroundColor: AppColors.success,
@@ -435,9 +438,10 @@ class _RecurringTransactionListScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('recurring.statusUpdateError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('recurring.statusUpdateError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );
@@ -472,18 +476,20 @@ class _RecurringTransactionListScreenState
         // await ref.read(recurringTransactionListProvider.notifier).executeRecurringTransaction(recurringTransaction.id);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('recurring.transactionExecuted'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('recurring.transactionExecuted'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('recurring.executeError'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('recurring.executeError'.tr()),
               backgroundColor: AppColors.error,
             ),
           );

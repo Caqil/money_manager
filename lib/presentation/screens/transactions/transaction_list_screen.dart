@@ -1,3 +1,4 @@
+// lib/presentation/screens/transactions/transaction_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -9,6 +10,7 @@ import '../../../core/constants/dimensions.dart';
 import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/transaction.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
@@ -40,6 +42,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
   bool _isSelectionMode = false;
   Set<String> _selectedTransactions = {};
   String _searchQuery = '';
+
+  // FIXED: Add controllers for ShadPopover
+  final ShadPopoverController _moreActionsController = ShadPopoverController();
 
   @override
   void initState() {
@@ -74,6 +79,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
   void dispose() {
     _tabController?.removeListener(_onTabChanged);
     _tabController?.dispose();
+    _moreActionsController.dispose(); // FIXED: Dispose controller
     super.dispose();
   }
 
@@ -160,12 +166,16 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
               ),
               tooltip: 'transactions.filters.all'.tr(),
             ),
+            // FIXED: Add controller to ShadPopover
             ShadPopover(
+              controller: _moreActionsController,
               popover: (context) => _buildMoreActionsMenu(),
               child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  _moreActionsController.toggle();
+                },
                 icon: const Icon(Icons.more_vert),
-                //tooltip: 'common.moreActions'.tr(),
+                tooltip: 'common.moreActions'.tr(),
               ),
             ),
           ],
@@ -234,34 +244,37 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
   }
 
   Widget _buildMoreActionsMenu() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.select_all, size: 18),
-          title: Text('transactions.selectMode'.tr()),
-          onTap: () {
-            Navigator.of(context).pop();
-            _enterSelectionMode();
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.file_download, size: 18),
-          title: Text('transactions.exportAll'.tr()),
-          onTap: () {
-            Navigator.of(context).pop();
-            _exportAllTransactions();
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.refresh, size: 18),
-          title: Text('common.refresh'.tr()),
-          onTap: () {
-            Navigator.of(context).pop();
-            ref.invalidate(transactionListProvider);
-          },
-        ),
-      ],
+    return ShadCard(
+      width: 200,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.select_all, size: 18),
+            title: Text('transactions.selectMode'.tr()),
+            onTap: () {
+              _moreActionsController.hide();
+              _enterSelectionMode();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.file_download, size: 18),
+            title: Text('transactions.exportAll'.tr()),
+            onTap: () {
+              _moreActionsController.hide();
+              _exportAllTransactions();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.refresh, size: 18),
+            title: Text('common.refresh'.tr()),
+            onTap: () {
+              _moreActionsController.hide();
+              ref.invalidate(transactionListProvider);
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -309,190 +322,79 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
         ? transactions
         : transactions.where((transaction) {
             final query = _searchQuery.toLowerCase();
-            return transaction.notes?.toLowerCase().contains(query) == true ||
-                transaction.amount.toString().contains(query);
+            return transaction.notes?.toLowerCase().contains(query) == true;
           }).toList();
 
     if (filteredTransactions.isEmpty) {
       return _buildEmptyState();
     }
 
-    // Group transactions by date
-    final groupedTransactions = _groupTransactionsByDate(filteredTransactions);
-
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(transactionListProvider);
       },
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppDimensions.paddingM),
-        itemCount: groupedTransactions.length,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        itemCount: filteredTransactions.length,
+        separatorBuilder: (context, index) => const SizedBox(
+          height: AppDimensions.spacingS,
+        ),
         itemBuilder: (context, index) {
-          final group = groupedTransactions[index];
-          return _buildDateGroup(group);
+          final transaction = filteredTransactions[index];
+          final isSelected = _selectedTransactions.contains(transaction.id);
+
+          return GestureDetector(
+            onLongPress: _isSelectionMode
+                ? null
+                : () => _enterSelectionModeWithTransaction(transaction.id),
+            child: TransactionItem(
+              transaction: transaction,
+              onTap: _isSelectionMode
+                  ? () => _toggleTransactionSelection(transaction.id)
+                  : () => _navigateToTransactionDetail(transaction),
+              onEdit: () => _navigateToEditTransaction(transaction),
+              onDelete: () => _showDeleteConfirmation(transaction),
+              onDuplicate: () => _navigateToDuplicateTransaction(transaction),
+              showActions: !_isSelectionMode,
+              isSelected: isSelected,
+              isSelectable: _isSelectionMode,
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildDateGroup(TransactionDateGroup group) {
-    final theme = ShadTheme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Date header
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingS,
-            vertical: AppDimensions.paddingS,
-          ),
-          child: Row(
-            children: [
-              Text(
-                group.dateLabel,
-                style: theme.textTheme.h4.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                _formatGroupTotal(group.totalAmount),
-                style: theme.textTheme.small.copyWith(
-                  color: theme.colorScheme.mutedForeground,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Transactions
-        ...group.transactions.map((transaction) => Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.spacingS),
-              child: TransactionItem(
-                transaction: transaction,
-                onTap: () => _handleTransactionTap(transaction),
-                onEdit: () => _editTransaction(transaction),
-                onDelete: () => _showDeleteConfirmation(transaction),
-                onDuplicate: () => _duplicateTransaction(transaction),
-                isSelectable: _isSelectionMode,
-                isSelected: _selectedTransactions.contains(transaction.id),
-              ),
-            )),
-
-        const SizedBox(height: AppDimensions.spacingM),
-      ],
-    );
-  }
-
   Widget _buildEmptyState() {
-    if (_searchQuery.isNotEmpty) {
-      return SearchEmptyState(
-        searchQuery: _searchQuery,
-        onClearSearch: () {
-          setState(() {
-            _searchQuery = '';
-          });
-          ref.read(transactionSearchQueryProvider.notifier).state = '';
-        },
-      );
-    }
-
-    if (_hasActiveFilters()) {
-      return EmptyStateWidget(
-        iconData: Icons.filter_list_off,
-        title: 'transactions.noFilteredTransactions'.tr(),
-        message: 'transactions.tryDifferentFilters'.tr(),
-        actionText: 'transactions.clearFilters'.tr(),
-        onActionPressed: _clearAllFilters,
-      );
-    }
-
-    return EmptyStateWidget(
-      iconData: Icons.receipt_long_outlined,
-      title: 'transactions.noTransactions'.tr(),
-      message: 'transactions.createFirstTransaction'.tr(),
-      actionText: 'transactions.addTransaction'.tr(),
-      onActionPressed: _navigateToAddTransaction,
+    return Center(
+      child: EmptyStateWidget(
+        iconData: Icons.receipt_long_outlined,
+        title: 'transactions.noTransactions'.tr(),
+        message: 'transactions.noTransactionsMessage'.tr(),
+        actionText: 'transactions.addFirstTransaction'.tr(),
+        onActionPressed: _navigateToAddTransaction,
+      ),
     );
   }
 
-  List<TransactionDateGroup> _groupTransactionsByDate(
-      List<Transaction> transactions) {
-    final groups = <String, List<Transaction>>{};
-    final now = DateTime.now();
-
-    for (final transaction in transactions) {
-      final dateKey = _getDateGroupKey(transaction.date, now);
-      groups[dateKey] ??= [];
-      groups[dateKey]!.add(transaction);
-    }
-
-    return groups.entries.map((entry) {
-      final totalAmount = entry.value.fold<double>(
-        0.0,
-        (sum, transaction) => sum + transaction.amount,
-      );
-
-      return TransactionDateGroup(
-        dateLabel: entry.key,
-        transactions: entry.value,
-        totalAmount: totalAmount,
-      );
-    }).toList();
-  }
-
-  String _getDateGroupKey(DateTime date, DateTime now) {
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final transactionDate = DateTime(date.year, date.month, date.day);
-
-    if (transactionDate == today) {
-      return 'transactions.today'.tr();
-    } else if (transactionDate == yesterday) {
-      return 'transactions.yesterday'.tr();
-    } else if (now.difference(date).inDays < 7) {
-      return DateFormat.EEEE().format(date);
-    } else if (date.year == now.year) {
-      return DateFormat.MMMd().format(date);
-    } else {
-      return DateFormat.yMMMd().format(date);
-    }
-  }
-
-  void _handleTransactionTap(Transaction transaction) {
-    if (_isSelectionMode) {
-      setState(() {
-        if (_selectedTransactions.contains(transaction.id)) {
-          _selectedTransactions.remove(transaction.id);
-        } else {
-          _selectedTransactions.add(transaction.id);
-        }
-      });
-    } else {
-      context.push('/transactions/${transaction.id}');
-    }
-  }
-
+  // Navigation methods
   void _navigateToAddTransaction() {
     context.push('/transactions/add');
   }
 
-  void _editTransaction(Transaction transaction) {
+  void _navigateToTransactionDetail(Transaction transaction) {
+    context.push('/transactions/${transaction.id}');
+  }
+
+  void _navigateToEditTransaction(Transaction transaction) {
     context.push('/transactions/edit/${transaction.id}');
   }
 
-  void _duplicateTransaction(Transaction transaction) {
-    context.push(
-      '/transactions/add?'
-      'type=${transaction.type.name}&'
-      'account=${transaction.accountId}&'
-      'category=${transaction.categoryId}&'
-      'amount=${transaction.amount}',
-    );
+  void _navigateToDuplicateTransaction(Transaction transaction) {
+    context.push('/transactions/add?duplicate=${transaction.id}');
   }
 
+  // Action methods
   void _showSearchDialog() {
     showShadDialog(
       context: context,
@@ -526,10 +428,27 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
     });
   }
 
+  void _enterSelectionModeWithTransaction(String transactionId) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedTransactions = {transactionId};
+    });
+  }
+
   void _exitSelectionMode() {
     setState(() {
       _isSelectionMode = false;
       _selectedTransactions.clear();
+    });
+  }
+
+  void _toggleTransactionSelection(String transactionId) {
+    setState(() {
+      if (_selectedTransactions.contains(transactionId)) {
+        _selectedTransactions.remove(transactionId);
+      } else {
+        _selectedTransactions.add(transactionId);
+      }
     });
   }
 
@@ -567,81 +486,83 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
               ? 'transactions.transactionDeleted'.tr()
               : 'transactions.errorDeletingTransaction'.tr()),
           backgroundColor: success ? AppColors.success : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          ),
         ),
       );
     }
   }
 
-  void _bulkDeleteTransactions() {
-    showShadDialog(
+  Future<void> _bulkDeleteTransactions() async {
+    if (_selectedTransactions.isEmpty) return;
+
+    final result = await showShadDialog<bool>(
       context: context,
       builder: (context) => ShadDialog(
         title: Text('transactions.deleteSelectedTransactions'.tr()),
-        description: Text(
-          'transactions.deleteSelectedTransactionsConfirmation'.tr(
-            namedArgs: {'count': _selectedTransactions.length.toString()},
-          ),
-        ),
+        description: Text('transactions.deleteSelectedTransactionsConfirmation'
+            .tr(namedArgs: {'count': _selectedTransactions.length.toString()})),
         actions: [
           ShadButton.outline(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(false),
             child: Text('common.cancel'.tr()),
           ),
           ShadButton.destructive(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _performBulkDelete();
-            },
+            onPressed: () => Navigator.of(context).pop(true),
             child: Text('common.delete'.tr()),
           ),
         ],
       ),
     );
+
+    if (result == true) {
+      final notifier = ref.read(transactionListProvider.notifier);
+      int deletedCount = 0;
+
+      for (final transactionId in _selectedTransactions) {
+        final success = await notifier.deleteTransaction(transactionId);
+        if (success) deletedCount++;
+      }
+
+      _exitSelectionMode();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('transactions.transactionsDeleted'
+                .tr(namedArgs: {'count': deletedCount.toString()})),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    }
   }
 
-  Future<void> _performBulkDelete() async {
-    final notifier = ref.read(transactionListProvider.notifier);
-
-    for (final transactionId in _selectedTransactions) {
-      await notifier.deleteTransaction(transactionId);
-    }
-
-    setState(() {
-      _selectedTransactions.clear();
-      _isSelectionMode = false;
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('transactions.selectedTransactionsDeleted'.tr()),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    }
-  }
-
-  void _bulkExportTransactions() {
+  Future<void> _bulkExportTransactions() async {
     // Implement bulk export functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Feature coming soon'),
+        backgroundColor: AppColors.info,
+      ),
+    );
   }
 
-  void _exportAllTransactions() {
+  Future<void> _exportAllTransactions() async {
     // Implement export all functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Export functionality coming soon'),
+        backgroundColor: AppColors.info,
+      ),
+    );
   }
 
-  void _clearAllFilters() {
-    ref.read(transactionTypeFilterProvider.notifier).state = null;
-    ref.read(transactionDateRangeFilterProvider.notifier).state = null;
-    ref.read(transactionCategoryFilterProvider.notifier).state = null;
-    ref.read(transactionAccountFilterProvider.notifier).state = null;
-    ref.read(transactionSearchQueryProvider.notifier).state = '';
-    setState(() {
-      _searchQuery = '';
-    });
+  // Helper methods for transaction handling
+  void _handleTransactionTap(Transaction transaction) {
+    if (_isSelectionMode) {
+      _toggleTransactionSelection(transaction.id);
+    } else {
+      _navigateToTransactionDetail(transaction);
+    }
   }
 
   bool _hasActiveFilters() {
@@ -649,27 +570,12 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
     final dateRangeFilter = ref.read(transactionDateRangeFilterProvider);
     final categoryFilter = ref.read(transactionCategoryFilterProvider);
     final accountFilter = ref.read(transactionAccountFilterProvider);
+    final searchQuery = ref.read(transactionSearchQueryProvider);
 
     return typeFilter != null ||
         dateRangeFilter != null ||
-        categoryFilter != null ||
-        accountFilter != null ||
-        _searchQuery.isNotEmpty;
+        (categoryFilter != null && categoryFilter.isNotEmpty) ||
+        (accountFilter != null && accountFilter.isNotEmpty) ||
+        searchQuery.isNotEmpty;
   }
-
-  String _formatGroupTotal(double amount) {
-    return CurrencyFormatter.format(amount);
-  }
-}
-
-class TransactionDateGroup {
-  final String dateLabel;
-  final List<Transaction> transactions;
-  final double totalAmount;
-
-  const TransactionDateGroup({
-    required this.dateLabel,
-    required this.transactions,
-    required this.totalAmount,
-  });
 }

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../data/services/notification_service.dart';
-import '../../core/errors/exceptions.dart';
 
 // Notification service provider
 final notificationServiceProvider = Provider<NotificationService>(

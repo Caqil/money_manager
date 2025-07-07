@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:money_manager/core/utils/logger.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../core/constants/dimensions.dart';

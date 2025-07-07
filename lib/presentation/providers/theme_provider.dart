@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/enums/app_theme.dart';
 import 'settings_provider.dart';
 
 // Theme mode provider from settings

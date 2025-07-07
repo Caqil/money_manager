@@ -51,7 +51,6 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final settings = ref.watch(settingsStateProvider);
 
     return Scaffold(
@@ -508,27 +507,24 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   // Action handlers
   Future<void> _selectTheme(ThemeMode themeMode) async {
     setState(() => _isLoading = true);
-
+    final sonner = ShadSonner.of(context);
     try {
       await ref.read(settingsStateProvider.notifier).setThemeMode(themeMode);
 
       if (mounted) {
         final themeName = _themeOptions
             .firstWhere((option) => option['mode'] == themeMode)['name'];
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.themeChanged'.tr(args: [themeName])),
-            backgroundColor: AppColors.success,
+        sonner.show(
+          ShadToast(
+            description: Text('settings.themeChanged'.tr(args: [themeName])),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.themeChangeError'.tr()),
-            backgroundColor: AppColors.error,
+        sonner.show(
+          ShadToast(
+            description: Text('settings.themeChangeError'.tr()),
           ),
         );
       }
@@ -544,9 +540,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           .read(settingsStateProvider.notifier)
           .setChartAnimationsEnabled(enabled);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(enabled
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(enabled
                 ? 'settings.chartAnimationsEnabled'.tr()
                 : 'settings.chartAnimationsDisabled'.tr()),
           ),
@@ -554,8 +551,10 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update chart animations: $e')),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('Failed to update chart animations: $e')),
         );
       }
     } finally {
@@ -565,61 +564,76 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
 
   Future<void> _toggleSmoothAnimations(bool enabled) async {
     // Implementation for toggling smooth animations
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
               Text('Smooth animations ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _configureAnimationSpeed() async {
     // Implementation for configuring animation speed
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure animation speed')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure animation speed')),
     );
   }
 
   Future<void> _toggleReduceMotion(bool enabled) async {
     // Implementation for toggling reduce motion
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Reduce motion ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('Reduce motion ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _configureFontSize() async {
     // Implementation for configuring font size
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure font size')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure font size')),
     );
   }
 
   Future<void> _configureFontFamily() async {
     // Implementation for configuring font family
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure font family')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure font family')),
     );
   }
 
   Future<void> _configureAccentColor() async {
     // Implementation for configuring accent color
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure accent color')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure accent color')),
     );
   }
 
   Future<void> _toggleHighContrast(bool enabled) async {
     // Implementation for toggling high contrast
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('High contrast ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('High contrast ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _configureBorderRadius() async {
     // Implementation for configuring border radius
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure border radius')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure border radius')),
     );
   }
 
@@ -651,17 +665,20 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
             .setThemeMode(ThemeMode.system);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('settings.themeReset'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('settings.themeReset'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to reset theme: $e')),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+                variant: ShadToastVariant.primary,
+                description: Text('Failed to reset theme: $e')),
           );
         }
       } finally {

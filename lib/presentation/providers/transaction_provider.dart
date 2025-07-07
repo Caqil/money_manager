@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/transaction.dart';
 import '../../data/repositories/transaction_repository.dart';
-import '../../core/enums/transaction_type.dart';
 import '../../core/utils/date_utils.dart';
 
 // Repository provider
@@ -184,82 +183,111 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     loadTransactions();
   }
 
+  // SAFE: Helper method to update state only if mounted
+  void _safeSetState(AsyncValue<List<Transaction>> newState) {
+    if (mounted) {
+      state = newState;
+    }
+  }
+
   // Load all transactions
   Future<void> loadTransactions() async {
     try {
-      state = const AsyncValue.loading();
+      _safeSetState(const AsyncValue.loading());
       final transactions = await _repository.getAllTransactions();
-      state = AsyncValue.data(transactions);
+      _safeSetState(AsyncValue.data(transactions));
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
     }
   }
 
   // Add transaction
   Future<String?> addTransaction(Transaction transaction) async {
+    if (!mounted) return null;
+
     try {
       final id = await _repository.addTransaction(transaction);
-      await loadTransactions(); // Refresh list
+      if (mounted) {
+        await loadTransactions(); // Refresh list
+      }
       return id;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return null;
     }
   }
 
   // Update transaction
   Future<bool> updateTransaction(Transaction transaction) async {
+    if (!mounted) return false;
+
     try {
       await _repository.updateTransaction(transaction);
-      await loadTransactions(); // Refresh list
+      if (mounted) {
+        await loadTransactions(); // Refresh list
+      }
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
     }
   }
 
   // Delete transaction
   Future<bool> deleteTransaction(String id) async {
+    if (!mounted) return false;
+
     try {
       await _repository.deleteTransaction(id);
-      await loadTransactions(); // Refresh list
+      if (mounted) {
+        await loadTransactions(); // Refresh list
+      }
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
     }
   }
 
   // Search transactions
   Future<List<Transaction>> searchTransactions(String query) async {
+    if (!mounted) return [];
+
     try {
       return await _repository.searchTransactions(query);
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return [];
     }
   }
 
   // Batch add transactions
   Future<bool> addTransactionsBatch(List<Transaction> transactions) async {
+    if (!mounted) return false;
+
     try {
       await _repository.addTransactionsBatch(transactions);
-      await loadTransactions(); // Refresh list
+      if (mounted) {
+        await loadTransactions(); // Refresh list
+      }
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
     }
   }
 
   // Refresh transactions
   Future<void> refresh() async {
-    await loadTransactions();
+    if (mounted) {
+      await loadTransactions();
+    }
   }
 
   // Clear all filters
   void clearFilters(WidgetRef ref) {
+    if (!mounted) return;
+
     ref.read(transactionTypeFilterProvider.notifier).state = null;
     ref.read(transactionDateRangeFilterProvider.notifier).state = null;
     ref.read(transactionCategoryFilterProvider.notifier).state = null;

@@ -461,12 +461,10 @@ class _AccountListScreenState extends ConsumerState<AccountListScreen>
 
   void _exportAccounts() {
     // TODO: Implement export functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Export functionality coming soon'),
-        backgroundColor: AppColors.info,
-      ),
-    );
+    final sonner = ShadSonner.of(context);
+    sonner.show(ShadToast(
+      description: Text('Export functionality coming soon'),
+    ));
   }
 
   void _showDeleteConfirmation(Account account) {
@@ -493,12 +491,10 @@ class _AccountListScreenState extends ConsumerState<AccountListScreen>
     final success = await notifier.deleteAccount(account.id);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Account "${account.name}" deleted successfully'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      final sonner = ShadSonner.of(context);
+      sonner.show(ShadToast(
+        description: Text('Account "${account.name}" deleted successfully'),
+      ));
     }
   }
 

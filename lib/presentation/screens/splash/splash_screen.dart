@@ -39,6 +39,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _startInitialization();
   }
 
+  @override
+  void dispose() {
+    // Mark as navigated to prevent any pending operations
+    _hasNavigated = true;
+
+    // Dispose of animation controllers
+    _backgroundController.dispose();
+
+    // Call super.dispose() last
+    super.dispose();
+  }
+
   void _initializeAnimations() {
     _backgroundController = AnimationController(
       duration: const Duration(milliseconds: 2000),
@@ -56,105 +68,242 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _backgroundController.forward();
   }
 
-  @override
-  void dispose() {
-    _backgroundController.dispose();
-    super.dispose();
-  }
-
   Future<void> _startInitialization() async {
     AppLogger.info('🚀 Starting splash initialization...');
 
     try {
       await _loadAppData();
 
-      // Complete initialization
-      setState(() {
-        _progress = 1.0;
-        _currentMessage = 'splash.init.complete'.tr();
-      });
+      // Complete initialization - check if widget is still mounted
+      if (mounted) {
+        setState(() {
+          _progress = 1.0;
+          _currentMessage = 'splash.init.complete'.tr();
+        });
+      }
 
       await Future.delayed(const Duration(milliseconds: 500));
 
-      if (!_hasNavigated) {
+      if (!_hasNavigated && mounted) {
         await _navigateToNextScreen();
       }
     } catch (e, stackTrace) {
       AppLogger.error('❌ Splash initialization failed', e, stackTrace);
-      _handleInitializationError(e, stackTrace);
+      if (mounted) {
+        _handleInitializationError(e, stackTrace);
+      }
     }
   }
 
   Future<void> _loadAppData() async {
     // Step 1: Load settings (20%)
-    setState(() {
-      _currentMessage = 'splash.loading.settings'.tr();
-      _progress = 0.0;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMessage = 'splash.loading.settings'.tr();
+        _progress = 0.0;
+      });
+    }
 
     await _loadSettings();
-    setState(() {
-      _progress = 0.2;
-    });
+
+    if (mounted) {
+      setState(() {
+        _progress = 0.2;
+      });
+    }
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 2: Initialize auth state (40%)
-    setState(() {
-      _currentMessage = 'splash.loading.auth'.tr();
-      _progress = 0.2;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMessage = 'splash.loading.auth'.tr();
+        _progress = 0.2;
+      });
+    }
 
     await _loadAuthState();
-    setState(() {
-      _progress = 0.4;
-    });
+
+    if (mounted) {
+      setState(() {
+        _progress = 0.4;
+      });
+    }
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 3: Verify services (60%)
-    setState(() {
-      _currentMessage = 'splash.loading.services'.tr();
-      _progress = 0.4;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMessage = 'splash.loading.services'.tr();
+        _progress = 0.4;
+      });
+    }
 
     await _verifyServices();
-    setState(() {
-      _progress = 0.6;
-    });
+
+    if (mounted) {
+      setState(() {
+        _progress = 0.6;
+      });
+    }
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 4: Prepare app data (80%)
-    setState(() {
-      _currentMessage = 'splash.loading.data'.tr();
-      _progress = 0.6;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMessage = 'splash.loading.data'.tr();
+        _progress = 0.6;
+      });
+    }
 
     await _prepareAppData();
-    setState(() {
-      _progress = 0.8;
-    });
+
+    if (mounted) {
+      setState(() {
+        _progress = 0.8;
+      });
+    }
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 5: Finalize (100%)
-    setState(() {
-      _currentMessage = 'splash.loading.finalizing'.tr();
-      _progress = 0.8;
-    });
+    if (mounted) {
+      setState(() {
+        _currentMessage = 'splash.loading.finalizing'.tr();
+        _progress = 0.8;
+      });
+    }
 
     await _finalizeLoad();
-    setState(() {
-      _progress = 1.0;
-    });
+
+    if (mounted) {
+      setState(() {
+        _progress = 1.0;
+      });
+    }
+  }
+
+// FIXED: Add mounted check to prevent setState on disposed widget
+  void _handleInitializationError(Object error, StackTrace stackTrace) {
+    if (mounted) {
+      setState(() {
+        _hasError = true;
+        _errorMessage = error.toString();
+        _currentMessage = 'splash.error.general'.tr();
+      });
+    }
+
+    AppLogger.error('Splash initialization error', error, stackTrace);
+  }
+
+// FIXED: Add mounted check to prevent setState on disposed widget
+  void _retryInitialization() {
+    if (mounted) {
+      setState(() {
+        _hasError = false;
+        _errorMessage = null;
+        _progress = 0.0;
+        _currentMessage = '';
+        _hasNavigated = false;
+      });
+
+      _startInitialization();
+    }
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    if (_hasNavigated || !mounted) {
+      print('⚠️ Navigation already completed or widget disposed, skipping...');
+      return;
+    }
+
+    _hasNavigated = true;
+
+    try {
+      print('🧭 === SPLASH NAVIGATION DECISION ===');
+
+      // Since we've already loaded settings in _loadSettings,
+      // just read the current state which should be accurate
+      final settingsState = ref.read(settingsStateProvider);
+      final prefs = await SharedPreferences.getInstance();
+
+      // Use SharedPreferences as the authoritative source
+      final prefsFirstLaunch =
+          prefs.getBool(AppConstants.keyIsFirstLaunch) ?? true;
+
+      print('📊 First Launch Status Check:');
+      print('  SharedPrefs: $prefsFirstLaunch');
+      print('  Provider: ${settingsState.isFirstLaunch}');
+      print('  Settings Loading: ${settingsState.isLoading}');
+
+      // Use SharedPreferences as the primary source of truth
+      final isFirstLaunch = prefsFirstLaunch;
+
+      print('📊 Final Decision: isFirstLaunch = $isFirstLaunch');
+
+      // Get auth state
+      final authState = ref.read(authStateProvider);
+      final hasAuthEnabled =
+          authState.isPinEnabled || authState.isBiometricEnabled;
+      final isAuthenticated = authState.isAuthenticated;
+
+      print('📊 Auth Status:');
+      print('  PIN enabled: ${authState.isPinEnabled}');
+      print('  Biometric enabled: ${authState.isBiometricEnabled}');
+      print('  Has auth enabled: $hasAuthEnabled');
+      print('  Is authenticated: $isAuthenticated');
+
+      if (!mounted) {
+        print('⚠️ Widget disposed during navigation decision, aborting...');
+        return;
+      }
+
+      // Navigation logic
+      if (isFirstLaunch) {
+        print('🎯 DECISION: Navigate to onboarding (first launch)');
+        if (mounted) context.go(RouteNames.onboarding);
+      } else if (hasAuthEnabled && !isAuthenticated) {
+        print('🎯 DECISION: Navigate to login (auth required)');
+        if (mounted) context.go(RouteNames.login);
+      } else {
+        print('🎯 DECISION: Navigate to home');
+        if (mounted) context.go(RouteNames.home);
+      }
+
+      print('✅ === NAVIGATION COMPLETED ===');
+    } catch (e, stackTrace) {
+      print('❌ === NAVIGATION ERROR ===');
+      print('Error: $e');
+      print('StackTrace: $stackTrace');
+
+      if (mounted) {
+        print('🔄 Fallback: Navigating to home');
+        context.go(RouteNames.home);
+      }
+    }
   }
 
   Future<void> _loadSettings() async {
     try {
-      // Load app settings using your existing provider
+      AppLogger.info('🔧 Loading app settings...');
+
+      // Load app settings and WAIT for completion
       final settingsNotifier = ref.read(settingsStateProvider.notifier);
       await settingsNotifier.loadSettings();
-      AppLogger.info('✅ Settings loaded');
+
+      // Verify settings are loaded by checking the state
+      final settingsState = ref.read(settingsStateProvider);
+      if (settingsState.isLoading) {
+        AppLogger.warning('⚠️ Settings still loading, waiting...');
+        // Give it more time if still loading
+        await Future.delayed(const Duration(milliseconds: 500));
+        await settingsNotifier.loadSettings();
+      }
+
+      AppLogger.info('✅ Settings loaded successfully');
+      print(
+          '🔍 Settings loaded: isFirstLaunch = ${settingsState.isFirstLaunch}');
     } catch (e) {
       AppLogger.error('❌ Failed to load settings', e);
-      // Continue with default settings
+      // Continue with default settings - don't fail the entire app
     }
   }
 
@@ -197,98 +346,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     AppLogger.info('🏁 Finalizing splash...');
     await Future.delayed(const Duration(milliseconds: 200));
     AppLogger.info('✅ Splash finalized');
-  }
-
-  // COMPLETELY REWRITTEN: Better navigation logic with comprehensive state checking
-  Future<void> _navigateToNextScreen() async {
-    if (_hasNavigated) {
-      print('⚠️ Navigation already completed, skipping...');
-      return;
-    }
-
-    _hasNavigated = true;
-
-    try {
-      print('🧭 === SPLASH NAVIGATION DECISION ===');
-
-      // Get multiple sources of truth for first launch
-      final settingsState = ref.read(settingsStateProvider);
-      final settingsService = ref.read(settingsServiceProvider);
-      final prefs = await SharedPreferences.getInstance();
-
-      final providerFirstLaunch = settingsState.isFirstLaunch;
-      final serviceFirstLaunch = settingsService.isFirstLaunch();
-      final prefsFirstLaunch =
-          prefs.getBool(AppConstants.keyIsFirstLaunch) ?? true;
-
-      print('📊 First Launch Status Check:');
-      print('  Provider: $providerFirstLaunch');
-      print('  Service: $serviceFirstLaunch');
-      print('  SharedPrefs: $prefsFirstLaunch');
-
-      // Use the most conservative approach - if ANY source says it's first launch, go to onboarding
-      // But if ALL sources say it's NOT first launch, skip onboarding
-      final isFirstLaunch =
-          providerFirstLaunch || serviceFirstLaunch || prefsFirstLaunch;
-
-      print('📊 Final Decision: isFirstLaunch = $isFirstLaunch');
-
-      // Get auth state
-      final authState = ref.read(authStateProvider);
-      final hasAuthEnabled =
-          authState.isPinEnabled || authState.isBiometricEnabled;
-      final isAuthenticated = authState.isAuthenticated;
-
-      print('📊 Auth Status:');
-      print('  PIN enabled: ${authState.isPinEnabled}');
-      print('  Biometric enabled: ${authState.isBiometricEnabled}');
-      print('  Has auth enabled: $hasAuthEnabled');
-      print('  Is authenticated: $isAuthenticated');
-
-      // Navigation logic
-      if (isFirstLaunch) {
-        print('🎯 DECISION: Navigate to onboarding (first launch)');
-        context.go(RouteNames.onboarding);
-      } else if (hasAuthEnabled && !isAuthenticated) {
-        print('🎯 DECISION: Navigate to login (auth required)');
-        context.go(RouteNames.login);
-      } else {
-        print('🎯 DECISION: Navigate to home');
-        context.go(RouteNames.home);
-      }
-
-      print('✅ === NAVIGATION COMPLETED ===');
-    } catch (e, stackTrace) {
-      print('❌ === NAVIGATION ERROR ===');
-      print('Error: $e');
-      print('StackTrace: $stackTrace');
-
-      // Fallback navigation
-      print('🔄 Fallback: Navigating to home');
-      context.go(RouteNames.home);
-    }
-  }
-
-  void _handleInitializationError(Object error, StackTrace stackTrace) {
-    setState(() {
-      _hasError = true;
-      _errorMessage = error.toString();
-      _currentMessage = 'splash.error.general'.tr();
-    });
-
-    AppLogger.error('Splash initialization error', error, stackTrace);
-  }
-
-  void _retryInitialization() {
-    setState(() {
-      _hasError = false;
-      _errorMessage = null;
-      _progress = 0.0;
-      _currentMessage = '';
-      _hasNavigated = false;
-    });
-
-    _startInitialization();
   }
 
   Widget _buildErrorState() {

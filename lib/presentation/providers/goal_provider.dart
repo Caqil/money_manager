@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/goal.dart';
 import '../../data/repositories/goal_repository.dart';
+import '../../data/services/notification_service.dart';
+import 'notification_provider.dart';
 
 // Repository provider
 final goalRepositoryProvider = Provider<GoalRepository>(
@@ -141,108 +143,163 @@ class GoalNotifier extends StateNotifier<AsyncValue<List<Goal>>> {
     loadGoals();
   }
 
-  // Load all goals
-  Future<void> loadGoals() async {
-    try {
-      state = const AsyncValue.loading();
-      final goals = await _repository.getAllGoals();
-      state = AsyncValue.data(goals);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+  void _safeSetState(AsyncValue<List<Goal>> newState) {
+    if (mounted) {
+      state = newState;
     }
   }
 
-  // Add goal
+  Future<void> loadGoals() async {
+    try {
+      _safeSetState(const AsyncValue.loading());
+      final goals = await _repository.getAllGoals();
+      _safeSetState(AsyncValue.data(goals));
+    } catch (error, stackTrace) {
+      _safeSetState(AsyncValue.error(error, stackTrace));
+    }
+  }
+
   Future<String?> addGoal(Goal goal) async {
+    if (!mounted) return null;
+
     try {
       final id = await _repository.addGoal(goal);
-      await loadGoals(); // Refresh list
+      if (mounted) {
+        await loadGoals();
+      }
       return id;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return null;
     }
   }
 
-  // Update goal
   Future<bool> updateGoal(Goal goal) async {
+    if (!mounted) return false;
+
     try {
       await _repository.updateGoal(goal);
-      await loadGoals(); // Refresh list
+      if (mounted) {
+        await loadGoals();
+      }
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
     }
   }
 
-  // Delete goal
   Future<bool> deleteGoal(String id) async {
+    if (!mounted) return false;
+
     try {
       await _repository.deleteGoal(id);
-      await loadGoals(); // Refresh list
+      if (mounted) {
+        await loadGoals();
+      }
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
     }
   }
 
-  // Update goal progress
   Future<bool> updateGoalProgress(String goalId, double newAmount) async {
+    if (!mounted) return false;
+
     try {
       await _repository.updateGoalProgress(goalId, newAmount);
-      await loadGoals(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Add to goal progress
-  Future<bool> addToGoalProgress(String goalId, double amount) async {
-    try {
-      await _repository.addToGoalProgress(goalId, amount);
-      await loadGoals(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Complete goal
-  Future<bool> completeGoal(String goalId) async {
-    try {
-      await _repository.completeGoal(goalId);
-      await loadGoals(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Toggle goal status
-  Future<bool> toggleGoalStatus(String id, bool isActive) async {
-    try {
-      if (isActive) {
-        await _repository.activateGoal(id);
-      } else {
-        await _repository.deactivateGoal(id);
+      if (mounted) {
+        await loadGoals();
       }
-      await loadGoals(); // Refresh list
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
+      return false;
+    }
+  }
+}
+
+// 3. NotificationNotifier Fix (if it extends StateNotifier)
+class NotificationNotifier extends StateNotifier<NotificationState> {
+  final NotificationService _service;
+
+  NotificationNotifier(this._service) : super(const NotificationState()) {
+    _checkNotificationStatus();
+  }
+
+  void _safeSetState(NotificationState newState) {
+    if (mounted) {
+      state = newState;
+    }
+  }
+
+  Future<void> _checkNotificationStatus() async {
+    try {
+      _safeSetState(state.copyWith(isLoading: true, error: null));
+
+      final areEnabled = await _service.areNotificationsEnabled();
+      final pendingNotifications = await _service.getPendingNotifications();
+
+      _safeSetState(state.copyWith(
+        isInitialized: true,
+        areEnabled: areEnabled,
+        pendingNotifications: pendingNotifications,
+        isLoading: false,
+      ));
+    } catch (e) {
+      _safeSetState(state.copyWith(
+        isInitialized: true,
+        isLoading: false,
+        error: 'Failed to check notification status: $e',
+      ));
+    }
+  }
+
+  Future<bool> showBudgetAlert({
+    required String budgetName,
+    required double spent,
+    required double limit,
+    required double percentage,
+    String? budgetId,
+  }) async {
+    if (!mounted) return false;
+
+    try {
+      _safeSetState(state.copyWith(isLoading: true, error: null));
+
+      await _service.showBudgetAlert(
+        budgetName: budgetName,
+        spent: spent,
+        limit: limit,
+        percentage: percentage,
+        budgetId: budgetId,
+      );
+
+      if (mounted) {
+        await _updatePendingNotifications();
+        _safeSetState(state.copyWith(isLoading: false));
+      }
+      return true;
+    } catch (e) {
+      _safeSetState(state.copyWith(
+        isLoading: false,
+        error: 'Failed to show budget alert: $e',
+      ));
       return false;
     }
   }
 
-  // Refresh goals
-  Future<void> refresh() async {
-    await loadGoals();
+  Future<void> _updatePendingNotifications() async {
+    if (!mounted) return;
+
+    try {
+      final pendingNotifications = await _service.getPendingNotifications();
+      _safeSetState(state.copyWith(pendingNotifications: pendingNotifications));
+    } catch (e) {
+      // Log error but don't update state with error for this background operation
+      print('Failed to update pending notifications: $e');
+    }
   }
 }
 

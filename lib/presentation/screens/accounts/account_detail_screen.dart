@@ -446,11 +446,11 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
         await notifier.toggleAccountStatus(account.id, !account.isActive);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      final sonner = ShadSonner.of(context);
+      sonner.show(
+        ShadToast(
+          description: Text(
               account.isActive ? 'Account deactivated' : 'Account activated'),
-          backgroundColor: AppColors.success,
         ),
       );
     }
@@ -480,12 +480,11 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
     final success = await notifier.deleteAccount(account.id);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Account deleted successfully'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      final sonner = ShadSonner.of(context);
+      sonner.show(ShadToast(
+        description: Text('Account deleted successfully'),
+      ));
+
       context.go('/accounts');
     }
   }

@@ -117,7 +117,6 @@ class _AccountFormState extends ConsumerState<AccountForm> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
 
     return Form(
       key: _formKey,
@@ -290,7 +289,7 @@ class _AccountFormState extends ConsumerState<AccountForm> {
               CustomCheckbox(
                 value: _isActive,
                 onChanged: widget.enabled && !widget.isLoading
-                    ? (value) => setState(() => _isActive = value ?? true)
+                    ? (value) => setState(() => _isActive = value)
                     : null,
                 labelText: 'accounts.isActive'.tr(),
                 sublabelText: 'Include this account in calculations and displays',
@@ -301,7 +300,7 @@ class _AccountFormState extends ConsumerState<AccountForm> {
               CustomCheckbox(
                 value: _includeInTotal,
                 onChanged: widget.enabled && !widget.isLoading
-                    ? (value) => setState(() => _includeInTotal = value ?? true)
+                    ? (value) => setState(() => _includeInTotal = value )
                     : null,
                 labelText: 'accounts.includeInTotal'.tr(),
                 sublabelText: 'Include this account balance in total calculations',

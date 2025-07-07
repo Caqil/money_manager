@@ -5,11 +5,9 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
-import 'widgets/settings_item.dart';
 
 class LanguageSettingsScreen extends ConsumerStatefulWidget {
   const LanguageSettingsScreen({super.key});
@@ -538,9 +536,10 @@ class _LanguageSettingsScreenState
         final newLocale = Locale(languageCode);
         await context.setLocale(newLocale);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.languageChanged'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.languageChanged'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -550,9 +549,10 @@ class _LanguageSettingsScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.languageChangeError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.languageChangeError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );

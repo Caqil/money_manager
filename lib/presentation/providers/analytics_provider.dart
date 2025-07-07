@@ -7,10 +7,7 @@ import '../../data/repositories/goal_repository.dart';
 import '../../data/models/transaction.dart';
 import '../../data/models/budget.dart';
 import '../../data/models/account.dart';
-import '../../data/models/goal.dart';
-import '../../core/enums/transaction_type.dart';
 import '../../core/utils/date_utils.dart';
-import '../../core/errors/exceptions.dart';
 import '../screens/analytics/widgets/date_range_selector.dart';
 
 // Repository providers

@@ -9,8 +9,6 @@ import '../../../core/utils/currency_formatter.dart';
 import '../../providers/settings_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
-import '../../widgets/common/error_widget.dart';
-import 'widgets/settings_item.dart';
 
 class CurrencySettingsScreen extends ConsumerStatefulWidget {
   const CurrencySettingsScreen({super.key});
@@ -475,9 +473,11 @@ class _CurrencySettingsScreenState
           .setBaseCurrency(currencyCode);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.currencyChanged'.tr(args: [currencyCode])),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description:
+                Text('settings.currencyChanged'.tr(args: [currencyCode])),
             backgroundColor: AppColors.success,
           ),
         );
@@ -487,9 +487,10 @@ class _CurrencySettingsScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description:
                 Text('settings.currencyChangeError'.tr(args: [e.toString()])),
             backgroundColor: AppColors.error,
           ),

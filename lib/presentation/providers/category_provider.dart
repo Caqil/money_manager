@@ -9,7 +9,8 @@ final categoryRepositoryProvider = Provider<CategoryRepository>(
 );
 
 // Category list provider
-final categoryListProvider = StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>(
+final categoryListProvider =
+    StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>(
   (ref) => CategoryNotifier(ref.read(categoryRepositoryProvider)),
 );
 
@@ -18,7 +19,8 @@ final activeCategoriesProvider = Provider<AsyncValue<List<Category>>>(
   (ref) {
     final categories = ref.watch(categoryListProvider);
     return categories.when(
-      data: (list) => AsyncValue.data(list.where((category) => category.isActive).toList()),
+      data: (list) =>
+          AsyncValue.data(list.where((category) => category.isActive).toList()),
       loading: () => const AsyncValue.loading(),
       error: (error, stack) => AsyncValue.error(error, stack),
     );
@@ -26,13 +28,15 @@ final activeCategoriesProvider = Provider<AsyncValue<List<Category>>>(
 );
 
 // Categories by type provider
-final categoriesByTypeProvider = Provider.family<AsyncValue<List<Category>>, CategoryType>(
+final categoriesByTypeProvider =
+    Provider.family<AsyncValue<List<Category>>, CategoryType>(
   (ref, type) {
     final categories = ref.watch(categoryListProvider);
     return categories.when(
-      data: (list) => AsyncValue.data(
-        list.where((category) => 
-          category.type == type || category.type == CategoryType.both).toList()),
+      data: (list) => AsyncValue.data(list
+          .where((category) =>
+              category.type == type || category.type == CategoryType.both)
+          .toList()),
       loading: () => const AsyncValue.loading(),
       error: (error, stack) => AsyncValue.error(error, stack),
     );
@@ -45,7 +49,7 @@ final parentCategoriesProvider = Provider<AsyncValue<List<Category>>>(
     final categories = ref.watch(categoryListProvider);
     return categories.when(
       data: (list) => AsyncValue.data(
-        list.where((category) => category.parentCategoryId == null).toList()),
+          list.where((category) => category.parentCategoryId == null).toList()),
       loading: () => const AsyncValue.loading(),
       error: (error, stack) => AsyncValue.error(error, stack),
     );
@@ -53,12 +57,14 @@ final parentCategoriesProvider = Provider<AsyncValue<List<Category>>>(
 );
 
 // Subcategories provider
-final subcategoriesProvider = Provider.family<AsyncValue<List<Category>>, String>(
+final subcategoriesProvider =
+    Provider.family<AsyncValue<List<Category>>, String>(
   (ref, parentId) {
     final categories = ref.watch(categoryListProvider);
     return categories.when(
-      data: (list) => AsyncValue.data(
-        list.where((category) => category.parentCategoryId == parentId).toList()),
+      data: (list) => AsyncValue.data(list
+          .where((category) => category.parentCategoryId == parentId)
+          .toList()),
       loading: () => const AsyncValue.loading(),
       error: (error, stack) => AsyncValue.error(error, stack),
     );
@@ -72,7 +78,8 @@ final categoryProvider = Provider.family<AsyncValue<Category?>, String>(
     return categories.when(
       data: (list) {
         try {
-          final category = list.firstWhere((category) => category.id == categoryId);
+          final category =
+              list.firstWhere((category) => category.id == categoryId);
           return AsyncValue.data(category);
         } catch (e) {
           return const AsyncValue.data(null);
@@ -89,7 +96,8 @@ final defaultCategoriesProvider = Provider<AsyncValue<List<Category>>>(
   (ref) {
     final categories = ref.watch(categoryListProvider);
     return categories.when(
-      data: (list) => AsyncValue.data(list.where((category) => category.isDefault).toList()),
+      data: (list) => AsyncValue.data(
+          list.where((category) => category.isDefault).toList()),
       loading: () => const AsyncValue.loading(),
       error: (error, stack) => AsyncValue.error(error, stack),
     );
@@ -118,104 +126,90 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     loadCategories();
   }
 
+  // SAFE: Helper method to update state only if mounted
+  void _safeSetState(AsyncValue<List<Category>> newState) {
+    if (mounted) {
+      state = newState;
+    }
+  }
+
   // Load all categories
   Future<void> loadCategories() async {
     try {
-      state = const AsyncValue.loading();
+      _safeSetState(const AsyncValue.loading());
       final categories = await _repository.getAllCategories();
-      state = AsyncValue.data(categories);
+      _safeSetState(AsyncValue.data(categories));
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
     }
   }
 
   // Initialize default categories
   Future<void> initializeDefaultCategories() async {
+    if (!mounted) return;
+
     try {
       await _repository.initializeDefaultCategories();
-      await loadCategories(); // Refresh list
+      if (mounted) {
+        await loadCategories(); // Refresh list
+      }
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
     }
   }
 
   // Add category
   Future<String?> addCategory(Category category) async {
+    if (!mounted) return null;
+
     try {
       final id = await _repository.addCategory(category);
-      await loadCategories(); // Refresh list
+      if (mounted) {
+        await loadCategories(); // Refresh list
+      }
       return id;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return null;
     }
   }
 
   // Update category
   Future<bool> updateCategory(Category category) async {
+    if (!mounted) return false;
+
     try {
       await _repository.updateCategory(category);
-      await loadCategories(); // Refresh list
+      if (mounted) {
+        await loadCategories(); // Refresh list
+      }
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
     }
   }
 
   // Delete category
   Future<bool> deleteCategory(String id) async {
+    if (!mounted) return false;
+
     try {
       await _repository.deleteCategory(id);
-      await loadCategories(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Toggle category status
-  Future<bool> toggleCategoryStatus(String id, bool isActive) async {
-    try {
-      if (isActive) {
-        await _repository.activateCategory(id);
-      } else {
-        await _repository.deactivateCategory(id);
+      if (mounted) {
+        await loadCategories(); // Refresh list
       }
-      await loadCategories(); // Refresh list
       return true;
     } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+      _safeSetState(AsyncValue.error(error, stackTrace));
       return false;
-    }
-  }
-
-  // Update sort order
-  Future<bool> updateSortOrder(String id, int newSortOrder) async {
-    try {
-      await _repository.updateSortOrder(id, newSortOrder);
-      await loadCategories(); // Refresh list
-      return true;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return false;
-    }
-  }
-
-  // Search categories
-  Future<List<Category>> searchCategories(String query) async {
-    try {
-      return await _repository.searchCategories(query);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      return [];
     }
   }
 
   // Refresh categories
   Future<void> refresh() async {
-    await loadCategories();
+    if (mounted) {
+      await loadCategories();
+    }
   }
 }
-

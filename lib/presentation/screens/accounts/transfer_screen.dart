@@ -4,7 +4,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../data/models/account.dart';
 import '../../providers/account_provider.dart';
@@ -277,37 +276,27 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
 
   void _showTransferHistory() {
     // TODO: Navigate to transfer history screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transfer history coming soon'),
-        backgroundColor: AppColors.info,
+    ShadSonner.of(context).show(
+      ShadToast(
+        description: Text('Transfer history coming soon'),
       ),
     );
   }
 
   void _showScheduledTransfers() {
     // TODO: Navigate to scheduled transfers screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Scheduled transfers coming soon'),
-        backgroundColor: AppColors.info,
+    ShadSonner.of(context).show(
+      ShadToast(
+        description: Text('Scheduled transfers coming soon'),
       ),
     );
   }
 
   void _showSuccessMessage(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: AppDimensions.spacingS),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: AppColors.success,
-          duration: const Duration(seconds: 3),
+      ShadSonner.of(context).show(
+        ShadToast(
+          description: Text(message),
         ),
       );
     }
@@ -315,17 +304,9 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
 
   void _showErrorMessage(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error, color: Colors.white),
-              const SizedBox(width: AppDimensions.spacingS),
-              Expanded(child: Text(message)),
-            ],
-          ),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 4),
+      ShadSonner.of(context).show(
+        ShadToast(
+          description: Text(message),
         ),
       );
     }

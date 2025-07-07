@@ -601,21 +601,21 @@ class _ThemeSelectorState extends ConsumerState<ThemeSelector>
       widget.onThemeChanged?.call(option.mode);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.themeChanged'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.themeChanged'.tr()),
             backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.themeChangeError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.themeChangeError'.tr()),
             backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }

@@ -205,9 +205,10 @@ class _AddEditRecurringTransactionScreenState
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('recurring.transactionUpdated'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('recurring.transactionUpdated'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
@@ -246,9 +247,10 @@ class _AddEditRecurringTransactionScreenState
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('recurring.transactionCreated'.tr()),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('recurring.transactionCreated'.tr()),
               backgroundColor: AppColors.success,
             ),
           );
@@ -262,9 +264,10 @@ class _AddEditRecurringTransactionScreenState
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEditing
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(isEditing
                 ? 'recurring.updateError'.tr()
                 : 'recurring.createError'.tr()),
             backgroundColor: AppColors.error,
@@ -316,13 +319,13 @@ class _AddEditRecurringTransactionScreenState
       // final success = await ref.read(recurringTransactionListProvider.notifier).deleteRecurringTransaction(_recurringTransaction!.id);
       final success = true; // Placeholder
 
-      if (!success) {
-      }
+      if (!success) {}
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('recurring.transactionDeleted'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('recurring.transactionDeleted'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -332,9 +335,10 @@ class _AddEditRecurringTransactionScreenState
       if (mounted) {
         setState(() => _isSaving = false);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('recurring.deleteError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('recurring.deleteError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );

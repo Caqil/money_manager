@@ -7,12 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/text_styles.dart';
-import '../../../core/errors/exceptions.dart';
 import '../../providers/auth_provider.dart';
 import '../../routes/route_names.dart';
-import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
-import '../../widgets/common/custom_dialog.dart';
 import 'widgets/biometric_button.dart';
 import 'widgets/pin_input_widget.dart';
 

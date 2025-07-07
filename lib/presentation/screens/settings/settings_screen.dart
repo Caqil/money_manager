@@ -4,7 +4,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
@@ -35,7 +34,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
     final settings = ref.watch(settingsStateProvider);
     final authState = ref.watch(authStateProvider);
 
@@ -70,7 +68,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Advanced
                   _buildAdvancedSection(),
 
-                   SizedBox(height: AppDimensions.spacingXl),
+                  SizedBox(height: AppDimensions.spacingXl),
                 ],
               ),
             ),
@@ -352,8 +350,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .setChartAnimationsEnabled(enabled);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update chart animations: $e')),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('Failed to update chart animations: $e')),
         );
       }
     } finally {
@@ -368,9 +368,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .read(settingsStateProvider.notifier)
           .setAutoBackupEnabled(enabled);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(enabled
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(enabled
                 ? 'settings.autoBackupEnabled'.tr()
                 : 'settings.autoBackupDisabled'.tr()),
           ),
@@ -378,8 +379,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update auto backup: $e')),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('Failed to update auto backup: $e')),
         );
       }
     } finally {
@@ -412,14 +415,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       try {
         // Add reset implementation here
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('settings.appReset'.tr())),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+                variant: ShadToastVariant.primary,
+                description: Text('settings.appReset'.tr())),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to reset app: $e')),
+          ShadSonner.of(context).show(
+            ShadToast.raw(
+                variant: ShadToastVariant.primary,
+                description: Text('Failed to reset app: $e')),
           );
         }
       } finally {

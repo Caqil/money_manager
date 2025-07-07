@@ -1,14 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
-import '../../../../core/constants/app_constants.dart';
 
 enum ExportFormat { json, csv, excel, pdf }
 
@@ -537,9 +534,10 @@ class _ExportImportWidgetState extends ConsumerState<ExportImportWidget>
       widget.onExportCompleted?.call(fileName);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.exportCompleted'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.exportCompleted'.tr()),
             backgroundColor: AppColors.success,
             action: SnackBarAction(
               label: 'settings.share'.tr(),
@@ -578,9 +576,10 @@ class _ExportImportWidgetState extends ConsumerState<ExportImportWidget>
       widget.onImportCompleted?.call(_selectedImportFile!);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.importCompleted'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.importCompleted'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -605,9 +604,10 @@ class _ExportImportWidgetState extends ConsumerState<ExportImportWidget>
   void _showError(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
         backgroundColor: AppColors.error,
       ),
     );

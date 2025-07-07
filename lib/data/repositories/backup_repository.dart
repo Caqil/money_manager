@@ -1,7 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-
 import '../services/hive_service.dart';
 import '../services/file_service.dart';
 import '../services/encryption_service.dart';

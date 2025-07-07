@@ -7,8 +7,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
-import '../../../../core/utils/currency_formatter.dart';
-import '../../../../core/utils/validation_helper.dart';
 
 class CurrencyRateEditor extends ConsumerStatefulWidget {
   final String baseCurrency;
@@ -401,21 +399,21 @@ class _CurrencyRateEditorState extends ConsumerState<CurrencyRateEditor> {
       widget.onRateChanged(mockRate);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.exchangeRateUpdated'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.exchangeRateUpdated'.tr()),
             backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.errorFetchingRate'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.errorFetchingRate'.tr()),
             backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }

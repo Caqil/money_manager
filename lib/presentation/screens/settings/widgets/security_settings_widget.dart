@@ -6,7 +6,6 @@ import 'package:local_auth/local_auth.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
-import '../../../../data/services/auth_service.dart';
 import '../../../providers/auth_provider.dart';
 
 class SecuritySettingsWidget extends ConsumerStatefulWidget {
@@ -694,9 +693,10 @@ class _SecuritySettingsWidgetState
   void _showError(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
         backgroundColor: AppColors.error,
       ),
     );

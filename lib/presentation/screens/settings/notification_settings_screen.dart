@@ -444,9 +444,10 @@ class _NotificationSettingsScreenState
           .read(settingsStateProvider.notifier)
           .setNotificationsEnabled(enabled);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(enabled
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(enabled
                 ? 'settings.notificationsEnabled'.tr()
                 : 'settings.notificationsDisabled'.tr()),
           ),
@@ -454,8 +455,10 @@ class _NotificationSettingsScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update notifications: $e')),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+              variant: ShadToastVariant.primary,
+              description: Text('Failed to update notifications: $e')),
         );
       }
     } finally {
@@ -466,33 +469,39 @@ class _NotificationSettingsScreenState
   // Budget notification handlers
   Future<void> _toggleBudgetAlerts(bool enabled) async {
     // Implementation for budget alerts toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Budget alerts ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('Budget alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _configureBudgetThreshold() async {
     // Implementation for budget threshold configuration
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure budget threshold')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure budget threshold')),
     );
   }
 
   Future<void> _toggleOverspendingAlerts(bool enabled) async {
     // Implementation for overspending alerts toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
               Text('Overspending alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleBudgetReminders(bool enabled) async {
     // Implementation for budget reminders toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
               Text('Budget reminders ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
@@ -500,67 +509,79 @@ class _NotificationSettingsScreenState
   // Goal notification handlers
   Future<void> _toggleGoalReminders(bool enabled) async {
     // Implementation for goal reminders toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Goal reminders ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('Goal reminders ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleGoalAchievements(bool enabled) async {
     // Implementation for goal achievements toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
               Text('Goal achievements ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleGoalProgress(bool enabled) async {
     // Implementation for goal progress toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Goal progress ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('Goal progress ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _configureGoalFrequency() async {
     // Implementation for goal frequency configuration
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure goal frequency')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure goal frequency')),
     );
   }
 
   // Transaction notification handlers
   Future<void> _toggleTransactionReminders(bool enabled) async {
     // Implementation for transaction reminders toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text(
               'Transaction reminders ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _configureReminderFrequency() async {
     // Implementation for reminder frequency configuration
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure reminder frequency')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure reminder frequency')),
     );
   }
 
   Future<void> _toggleRecurringAlerts(bool enabled) async {
     // Implementation for recurring alerts toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
               Text('Recurring alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleLargeTransactionAlerts(bool enabled) async {
     // Implementation for large transaction alerts toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text(
               'Large transaction alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
@@ -568,27 +589,30 @@ class _NotificationSettingsScreenState
   // Backup notification handlers
   Future<void> _toggleBackupReminders(bool enabled) async {
     // Implementation for backup reminders toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content:
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
               Text('Backup reminders ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleBackupSuccess(bool enabled) async {
     // Implementation for backup success toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text(
               'Backup success alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleBackupFailure(bool enabled) async {
     // Implementation for backup failure toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text(
               'Backup failure alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
@@ -596,54 +620,67 @@ class _NotificationSettingsScreenState
   // System notification handlers
   Future<void> _toggleAppUpdates(bool enabled) async {
     // Implementation for app updates toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('App updates ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('App updates ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleTipsAndTricks(bool enabled) async {
     // Implementation for tips and tricks toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Tips and tricks ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('Tips and tricks ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _toggleSecurityAlerts(bool enabled) async {
     // Implementation for security alerts toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text('Security alerts ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description:
+              Text('Security alerts ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   // Preference handlers
   Future<void> _configureQuietHours() async {
     // Implementation for quiet hours configuration
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure quiet hours')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure quiet hours')),
     );
   }
 
   Future<void> _configureNotificationSound() async {
     // Implementation for notification sound configuration
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configure notification sound')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Configure notification sound')),
     );
   }
 
   Future<void> _toggleVibration(bool enabled) async {
     // Implementation for vibration toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Vibration ${enabled ? 'enabled' : 'disabled'}')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Vibration ${enabled ? 'enabled' : 'disabled'}')),
     );
   }
 
   Future<void> _sendTestNotification() async {
     // Implementation for sending test notification
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Test notification sent!')),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+          variant: ShadToastVariant.primary,
+          description: Text('Test notification sent!')),
     );
   }
 }

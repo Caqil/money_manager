@@ -876,24 +876,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
 
   void _showErrorMessage(String message) {
     if (_isDisposed || !mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
+    ShadSonner.of(context).show(
+      ShadToast(
+        description: Text(message),
       ),
     );
   }
 
   void _showSuccessMessage(String message) {
     if (_isDisposed || !mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
+    ShadSonner.of(context).show(
+      ShadToast(
+        description: Text(message),
       ),
     );
   }

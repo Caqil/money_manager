@@ -1,17 +1,14 @@
 // lib/presentation/screens/onboarding/onboarding_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/colors.dart';
-import '../../../core/constants/text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../providers/settings_provider.dart';
 import '../../routes/route_names.dart';
-import '../../widgets/common/loading_widget.dart';
 import '../auth/pin_setup_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -146,18 +143,58 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       }
 
       if (mounted) {
-        print('🏁 OnboardingScreen: Navigating to setup completion...');
+        print('🔧 OnboardingScreen: Updating state...');
 
-        // Navigate to a special "setup completion" screen
-        // This screen will handle the state update and final navigation
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const OnboardingCompletionScreen(),
-          ),
-        );
+        // STEP 1: Update SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(AppConstants.keyIsFirstLaunch, false);
+
+        // Force commit on Android
+        try {
+          await prefs.commit();
+        } catch (e) {
+          print('⚠️ Commit not available: $e');
+        }
+
+        // Set additional safety indicators
+        await prefs.setBool('app_setup_completed', true);
+        await prefs.setInt('setup_completion_timestamp',
+            DateTime.now().millisecondsSinceEpoch);
+
+        // STEP 2: Update providers
+        try {
+          final settingsNotifier = ref.read(settingsStateProvider.notifier);
+          await settingsNotifier.setIsFirstLaunch(false);
+          await settingsNotifier.loadSettings();
+          print('✅ OnboardingScreen: Providers updated');
+        } catch (e) {
+          print('⚠️ OnboardingScreen: Provider update failed: $e');
+        }
+
+        // STEP 3: Wait to ensure persistence
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // STEP 4: Verify the changes
+        final verification = prefs.getBool(AppConstants.keyIsFirstLaunch);
+        print(
+            '🔍 OnboardingScreen: Final verification: isFirstLaunch = $verification');
+
+        if (verification != false) {
+          throw Exception('State update verification failed!');
+        }
+
+        print('✅ OnboardingScreen: Setup completed successfully!');
+
+        // STEP 5: Navigate to home using go_router
+        if (mounted) {
+          print('🏠 OnboardingScreen: Navigating to home...');
+          context.go(RouteNames.home);
+          print('✅ OnboardingScreen: Navigation completed!');
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ OnboardingScreen: Error during completion: $e');
+      print('StackTrace: $stackTrace');
       _hasCompleted = false;
 
       if (mounted) {
@@ -165,6 +202,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           SnackBar(
             content: Text('Setup failed: $e'),
             backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: () => _completeOnboarding(),
+            ),
           ),
         );
       }
@@ -371,7 +412,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 }
 
-// NEW: Dedicated completion screen that handles state updates
 class OnboardingCompletionScreen extends ConsumerStatefulWidget {
   const OnboardingCompletionScreen({super.key});
 
@@ -454,15 +494,13 @@ class _OnboardingCompletionScreenState
 
       print('✅ OnboardingCompletionScreen: All checks passed!');
 
-      // STEP 6: Navigate to home with complete stack replacement
+      // STEP 6: Navigate to home using go_router (FIXED)
       if (mounted) {
         print('🏠 OnboardingCompletionScreen: Navigating to home...');
 
-        // Use the most aggressive navigation to completely clear the stack
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteNames.home,
-          (Route<dynamic> route) => false,
-        );
+        // FIXED: Use go_router's declarative navigation instead of imperative
+        // This clears the entire navigation stack and goes to home
+        context.go(RouteNames.home);
 
         print('✅ OnboardingCompletionScreen: Navigation completed!');
       }
@@ -472,7 +510,8 @@ class _OnboardingCompletionScreenState
       print('StackTrace: $stackTrace');
 
       if (mounted) {
-        // Show error and go back to onboarding
+        // FIXED: Also use go_router for error navigation
+        // Show error dialog and then navigate back to onboarding
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -481,11 +520,8 @@ class _OnboardingCompletionScreenState
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                        builder: (context) => const OnboardingScreen()),
-                  );
+                  Navigator.of(context).pop(); // Close dialog
+                  context.go(RouteNames.onboarding); // Go back to onboarding
                 },
                 child: const Text('Try Again'),
               ),

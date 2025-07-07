@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:money_manager/main.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../utils/logger.dart';
-
 
 class ErrorHandler {
   ErrorHandler._();
@@ -48,20 +47,13 @@ class ErrorHandler {
   }
 
   static void showErrorSnackBar(BuildContext context, Object error) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
+    final sonner = ShadSonner.of(context);
+    sonner.show(
+      ShadToast(
+        description: Text(
           kDebugMode
               ? error.toString()
-              : 'An error occurred. Please try again.',
-        ),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'Dismiss',
-          textColor: Theme.of(context).colorScheme.onError,
-          onPressed: () => messenger.hideCurrentSnackBar(),
+              : 'An unexpected error occurred. Please try again.',
         ),
       ),
     );

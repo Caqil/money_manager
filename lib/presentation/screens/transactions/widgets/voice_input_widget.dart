@@ -44,7 +44,7 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -166,14 +166,13 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
               child: ShadButton.outline(
                 size: ShadButtonSize.sm,
                 onPressed: widget.enabled ? _toggleListening : null,
-                backgroundColor: _isListening 
-                    ? AppColors.primary.withOpacity(0.1)
-                    : null,
+                backgroundColor:
+                    _isListening ? AppColors.primary.withOpacity(0.1) : null,
                 child: Icon(
                   _isListening ? Icons.mic : Icons.mic_none,
                   size: 16,
-                  color: _isListening 
-                      ? AppColors.primary 
+                  color: _isListening
+                      ? AppColors.primary
                       : theme.colorScheme.foreground,
                 ),
               ),
@@ -227,18 +226,18 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
           // Current words
           Container(
             width: double.infinity,
-           height: 60,
+            height: 60,
             padding: const EdgeInsets.all(AppDimensions.paddingM),
             decoration: BoxDecoration(
               color: AppColors.lightSurfaceVariant,
               borderRadius: BorderRadius.circular(AppDimensions.radiusS),
             ),
             child: Text(
-              _currentWords.isNotEmpty 
-                  ? _currentWords 
+              _currentWords.isNotEmpty
+                  ? _currentWords
                   : widget.hintText ?? 'voice.speakNow'.tr(),
               style: TextStyle(
-                color: _currentWords.isNotEmpty 
+                color: _currentWords.isNotEmpty
                     ? AppColors.lightOnSurface
                     : AppColors.lightOnSurfaceVariant,
                 fontStyle: _currentWords.isEmpty ? FontStyle.italic : null,
@@ -264,10 +263,10 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
                     value: _confidence,
                     backgroundColor: AppColors.lightBorder,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      _confidence > 0.7 
-                          ? AppColors.success 
-                          : _confidence > 0.4 
-                              ? AppColors.warning 
+                      _confidence > 0.7
+                          ? AppColors.success
+                          : _confidence > 0.4
+                              ? AppColors.warning
                               : AppColors.error,
                     ),
                   ),
@@ -321,12 +320,10 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
           return AnimatedContainer(
             duration: Duration(milliseconds: 100 + (index * 50)),
             width: 3,
-            height: _isListening 
-                ? (20 + (index % 3) * 10).toDouble()
-                : 5,
+            height: _isListening ? (20 + (index % 3) * 10).toDouble() : 5,
             margin: const EdgeInsets.symmetric(horizontal: 1),
             decoration: BoxDecoration(
-              color: _isListening 
+              color: _isListening
                   ? AppColors.primary.withOpacity(0.7 + (index % 2) * 0.3)
                   : AppColors.lightBorder,
               borderRadius: BorderRadius.circular(2),
@@ -423,14 +420,12 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
   void _showError(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text(message),
         backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+        
       ),
     );
   }

@@ -5,7 +5,6 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../providers/settings_provider.dart';
 
 class LanguageInfo {
@@ -223,7 +222,7 @@ class _LanguageSelectorState extends ConsumerState<LanguageSelector> {
 
         // Search bar for languages
         ShadInput(
-          placeholder:Text( 'settings.searchLanguages'.tr()),
+          placeholder: Text('settings.searchLanguages'.tr()),
           leading: const Icon(Icons.search, size: 18),
           onChanged: (value) {
             // Implement search functionality if needed
@@ -369,21 +368,21 @@ class _LanguageSelectorState extends ConsumerState<LanguageSelector> {
       widget.onLanguageChanged?.call(language.code);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.languageChanged'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.languageChanged'.tr()),
             backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.languageChangeError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.languageChangeError'.tr()),
             backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
           ),
         );
       }

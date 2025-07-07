@@ -646,13 +646,11 @@ class _TransactionDetailScreenState
     // Implement clipboard copy functionality
     // Clipboard.setData(ClipboardData(text: text));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('common.copiedToClipboard'.tr()),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
+    ShadSonner.of(context).show(
+      ShadToast.raw(
+        variant: ShadToastVariant.primary,
+        description: Text('common.copiedToClipboard'.tr()),
+       
       ),
     );
   }
@@ -690,9 +688,10 @@ class _TransactionDetailScreenState
       final success = await notifier.deleteTransaction(transaction.id);
 
       if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('transactions.transactionDeleted'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('transactions.transactionDeleted'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
@@ -700,9 +699,10 @@ class _TransactionDetailScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('transactions.errorDeletingTransaction'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('transactions.errorDeletingTransaction'.tr()),
             backgroundColor: AppColors.error,
           ),
         );

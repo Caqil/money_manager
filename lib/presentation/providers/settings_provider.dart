@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/services/settings_service.dart';
-import '../../core/enums/app_theme.dart';
 
 // Settings service provider
 final settingsServiceProvider = Provider<SettingsService>(
@@ -171,7 +170,20 @@ class SettingsState {
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsService _service;
 
-  SettingsNotifier(this._service) : super(const SettingsState());
+  // FIXED: Don't assume first launch in initial state - wait for loading
+  SettingsNotifier(this._service)
+      : super(const SettingsState(
+          isFirstLaunch: false, // Changed from true to false as default
+          isLoading: true, // Mark as loading initially
+        )) {
+    // Load settings immediately but don't await it in constructor
+    _initializeSettings();
+  }
+
+  // FIXED: Separate method for initialization to handle errors properly
+  Future<void> _initializeSettings() async {
+    await loadSettings();
+  }
 
   // Load all settings from service
   Future<void> loadSettings() async {
@@ -199,6 +211,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final isFirstLaunch = _service.isFirstLaunch();
       final lastBackupDate = _service.getLastBackupDate();
 
+      print('🔧 SettingsNotifier: Loaded isFirstLaunch = $isFirstLaunch');
+
       state = SettingsState(
         themeMode: themeMode,
         language: language,
@@ -222,9 +236,27 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         isLoading: false,
       );
     } catch (e) {
+      print('❌ SettingsNotifier: Failed to load settings: $e');
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to load settings: $e',
+      );
+    }
+  }
+
+  // Set first launch status
+  Future<void> setIsFirstLaunch(bool isFirstLaunch) async {
+    try {
+      print('🔧 SettingsNotifier: Setting isFirstLaunch = $isFirstLaunch');
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setIsFirstLaunch(isFirstLaunch);
+      state = state.copyWith(isFirstLaunch: isFirstLaunch, isLoading: false);
+      print('✅ SettingsNotifier: isFirstLaunch updated successfully');
+    } catch (e) {
+      print('❌ SettingsNotifier: Failed to update isFirstLaunch: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update first launch status: $e',
       );
     }
   }
@@ -422,20 +454,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to update analytics settings: $e',
-      );
-    }
-  }
-
-  // ADDED: Set first launch status (this was missing!)
-  Future<void> setIsFirstLaunch(bool isFirstLaunch) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setIsFirstLaunch(isFirstLaunch);
-      state = state.copyWith(isFirstLaunch: isFirstLaunch, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to update first launch status: $e',
       );
     }
   }

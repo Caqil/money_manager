@@ -304,9 +304,10 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
           .setAutoBackupEnabled(enabled);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(enabled
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(enabled
                 ? 'settings.autoBackupEnabled'.tr()
                 : 'settings.autoBackupDisabled'.tr()),
             backgroundColor: AppColors.success,
@@ -315,9 +316,10 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.autoBackupToggleError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.autoBackupToggleError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );
@@ -368,18 +370,20 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
       await Future.delayed(const Duration(seconds: 3));
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.backupCompleted'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.backupCompleted'.tr()),
             backgroundColor: AppColors.success,
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('settings.backupError'.tr()),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('settings.backupError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );

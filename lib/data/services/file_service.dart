@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:image_picker/image_picker.dart';
 
@@ -230,7 +229,6 @@ class FileService {
   Future<String> copyFile(String sourcePath, String destinationDir,
       {String? newName}) async {
     try {
-      final sourceFile = File(sourcePath);
       final fileName = newName ?? path.basename(sourcePath);
       final destinationPath = path.join(destinationDir, fileName);
 

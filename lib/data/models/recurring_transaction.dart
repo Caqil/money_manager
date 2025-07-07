@@ -2,8 +2,6 @@ import 'package:hive/hive.dart';
 import 'package:equatable/equatable.dart';
 import 'package:money_manager/data/models/transaction.dart';
 
-import '../../core/enums/transaction_type.dart';
-
 part 'recurring_transaction.g.dart';
 
 @HiveType(typeId: 5)

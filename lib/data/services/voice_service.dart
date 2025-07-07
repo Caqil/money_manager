@@ -2,8 +2,6 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../core/constants/dimensions.dart';
-import '../../core/enums/transaction_type.dart';
 import '../../core/errors/exceptions.dart';
 import '../models/transaction.dart';
 
@@ -108,8 +106,6 @@ class VoiceService {
         localeId: localeId,
         listenFor: timeout,
         pauseFor: AppConstants.voiceInputPause,
-        partialResults: true,
-        cancelOnError: true,
       );
     } catch (e) {
       _isListening = false;
@@ -159,8 +155,6 @@ class VoiceService {
   // Parse voice input for transaction data
   VoiceTransactionData? parseTransactionFromText(String text) {
     try {
-      final words = text.toLowerCase().split(' ');
-
       // Extract amount
       double? amount;
       final amountRegex = RegExp(r'\b(\d+(?:\.\d{2})?)\b');

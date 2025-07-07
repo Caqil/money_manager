@@ -10,14 +10,12 @@ import '../../core/errors/exceptions.dart';
 class BadgeRepository {
   static const _uuid = Uuid();
   late final HiveService _hiveService;
-  late final EncryptionService _encryptionService;
 
   BadgeRepository({
     HiveService? hiveService,
     EncryptionService? encryptionService,
   }) {
     _hiveService = hiveService ?? HiveService();
-    _encryptionService = encryptionService ?? EncryptionService();
   }
 
   // Get badges box

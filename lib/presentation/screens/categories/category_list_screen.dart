@@ -419,16 +419,13 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
     final success = await notifier.deleteCategory(category.id);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success
+      ShadSonner.of(context).show(
+        ShadToast.raw(
+          variant:
+              success ? ShadToastVariant.primary : ShadToastVariant.destructive,
+          description: Text(success
               ? 'categories.categoryDeleted'.tr()
               : 'categories.errorDeletingCategory'.tr()),
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          ),
         ),
       );
     }
@@ -444,18 +441,15 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
     final success = await notifier.updateCategory(updatedCategory);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success
+      ShadSonner.of(context).show(
+        ShadToast.raw(
+          variant:
+              success ? ShadToastVariant.primary : ShadToastVariant.destructive,
+          description: Text(success
               ? (category.isActive
                   ? 'categories.categoryDeactivated'.tr()
                   : 'categories.categoryActivated'.tr())
               : 'categories.errorUpdatingCategory'.tr()),
-          backgroundColor: success ? AppColors.success : AppColors.error,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          ),
         ),
       );
     }
@@ -468,27 +462,19 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
       await notifier.initializeDefaultCategories();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('categories.defaultCategoriesInitialized'.tr()),
-            backgroundColor: AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            ),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text('categories.defaultCategoriesInitialized'.tr()),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('categories.errorInitializingDefaults'.tr()),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            ),
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.destructive,
+            description: Text('categories.defaultCategoriesInitialized'.tr()),
           ),
         );
       }

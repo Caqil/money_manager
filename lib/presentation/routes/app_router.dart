@@ -13,39 +13,36 @@ import '../screens/budgets/budget_list_screen.dart';
 import '../screens/analytics/analytics_screen.dart';
 import '../screens/accounts/account_list_screen.dart';
 import '../screens/settings/settings_screen.dart';
-import '../providers/auth_provider.dart';
 import '../providers/settings_provider.dart';
 import 'route_names.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final settingsState = ref.watch(settingsStateProvider);
 
   return GoRouter(
     initialLocation: RouteNames.splash,
-    // redirect: (context, state) {
-    //   final currentLocation = state.matchedLocation;
-    //   final settingsState = ref.read(settingsStateProvider);
+    redirect: (context, state) {
+      final currentLocation = state.matchedLocation;
+      final settingsState = ref.read(settingsStateProvider);
 
-    //   // IMPORTANT: Let splash handle its own navigation
-    //   if (currentLocation == RouteNames.splash) {
-    //     return null;
-    //   }
+      // IMPORTANT: Let splash handle its own navigation
+      if (currentLocation == RouteNames.splash) {
+        return null;
+      }
 
-    //   // IMPORTANT: Don't redirect if already on onboarding
-    //   if (currentLocation == RouteNames.onboarding) {
-    //     return null;
-    //   }
+      // IMPORTANT: Don't redirect if already on onboarding
+      if (currentLocation == RouteNames.onboarding) {
+        return null;
+      }
 
-    //   // Only redirect TO onboarding if first launch
-    //   if (settingsState.isFirstLaunch &&
-    //       currentLocation != RouteNames.onboarding &&
-    //       currentLocation != RouteNames.splash) {
-    //     return RouteNames.onboarding;
-    //   }
+      // Only redirect TO onboarding if first launch
+      if (settingsState.isFirstLaunch &&
+          currentLocation != RouteNames.onboarding &&
+          currentLocation != RouteNames.splash) {
+        return RouteNames.onboarding;
+      }
 
-    //   return null;
-    // },
+      return null;
+    },
     routes: [
       // Public routes (no authentication required)
       GoRoute(
