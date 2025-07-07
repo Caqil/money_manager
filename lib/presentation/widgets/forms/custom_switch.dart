@@ -33,7 +33,10 @@ class CustomSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Simple switch without label
-    if (labelText == null && sublabelText == null && label == null && sublabel == null) {
+    if (labelText == null &&
+        sublabelText == null &&
+        label == null &&
+        sublabel == null) {
       return ShadSwitch(
         value: value,
         onChanged: enabled ? onChanged : null,
@@ -42,15 +45,17 @@ class CustomSwitch extends StatelessWidget {
 
     // Switch with label and sublabel
     return Container(
-      padding: padding ?? const EdgeInsets.symmetric(
-        vertical: AppDimensions.paddingS,
-        horizontal: AppDimensions.paddingM,
-      ),
+      padding: padding ??
+          const EdgeInsets.symmetric(
+            vertical: AppDimensions.paddingS,
+            horizontal: AppDimensions.paddingM,
+          ),
       child: ShadSwitch(
         value: value,
         onChanged: enabled ? onChanged : null,
         label: label ?? (labelText != null ? Text(labelText!) : null),
-        sublabel: sublabel ?? (sublabelText != null ? Text(sublabelText!) : null),
+        sublabel:
+            sublabel ?? (sublabelText != null ? Text(sublabelText!) : null),
       ),
     );
   }
@@ -124,7 +129,6 @@ class _CustomSwitchGroupState extends State<CustomSwitchGroup> {
           ),
           const SizedBox(height: AppDimensions.spacingS),
         ],
-
         if (widget.subtitle != null) ...[
           Text(
             widget.subtitle!,
@@ -132,7 +136,6 @@ class _CustomSwitchGroupState extends State<CustomSwitchGroup> {
           ),
           const SizedBox(height: AppDimensions.spacingM),
         ],
-
         Container(
           padding: widget.padding,
           child: Column(
@@ -203,7 +206,8 @@ class SwitchFormField extends StatelessWidget {
       onChanged: enabled ? onChanged : null,
       validator: validator,
       inputLabel: inputLabel ?? (labelText != null ? Text(labelText!) : null),
-      inputSublabel: inputSublabel ?? (sublabelText != null ? Text(sublabelText!) : null),
+      inputSublabel:
+          inputSublabel ?? (sublabelText != null ? Text(sublabelText!) : null),
     );
   }
 }
@@ -243,18 +247,16 @@ class CompactSwitch extends StatelessWidget {
               leading!,
               const SizedBox(width: AppDimensions.spacingM),
             ],
-            
             Expanded(
               child: Text(
                 title,
                 style: theme.textTheme.p.copyWith(
-                  color: enabled 
-                    ? theme.colorScheme.foreground
-                    : theme.colorScheme.mutedForeground,
+                  color: enabled
+                      ? theme.colorScheme.foreground
+                      : theme.colorScheme.mutedForeground,
                 ),
               ),
             ),
-            
             ShadSwitch(
               value: value,
               onChanged: enabled ? onChanged : null,
@@ -290,14 +292,13 @@ class SettingsSwitch extends StatelessWidget {
     final theme = ShadTheme.of(context);
 
     return ShadCard(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: Row(
         children: [
           if (icon != null) ...[
             icon!,
             const SizedBox(width: AppDimensions.spacingM),
           ],
-          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -307,9 +308,9 @@ class SettingsSwitch extends StatelessWidget {
                   title,
                   style: theme.textTheme.p.copyWith(
                     fontWeight: FontWeight.w500,
-                    color: enabled 
-                      ? theme.colorScheme.foreground
-                      : theme.colorScheme.mutedForeground,
+                    color: enabled
+                        ? theme.colorScheme.foreground
+                        : theme.colorScheme.mutedForeground,
                   ),
                 ),
                 if (description != null) ...[
@@ -322,9 +323,7 @@ class SettingsSwitch extends StatelessWidget {
               ],
             ),
           ),
-          
           const SizedBox(width: AppDimensions.spacingM),
-          
           ShadSwitch(
             value: value,
             onChanged: enabled ? onChanged : null,
@@ -367,17 +366,17 @@ class SwitchListTile extends StatelessWidget {
     return InkWell(
       onTap: enabled ? () => onChanged?.call(!value) : null,
       child: Container(
-        padding: contentPadding ?? EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingM,
-          vertical: dense ? AppDimensions.paddingS : AppDimensions.paddingM,
-        ),
+        padding: contentPadding ??
+            EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingM,
+              vertical: dense ? AppDimensions.paddingS : AppDimensions.paddingM,
+            ),
         child: Row(
           children: [
             if (leading != null) ...[
               leading!,
               const SizedBox(width: AppDimensions.spacingM),
             ],
-            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,9 +385,9 @@ class SwitchListTile extends StatelessWidget {
                   Text(
                     title,
                     style: theme.textTheme.p.copyWith(
-                      color: enabled 
-                        ? theme.colorScheme.foreground
-                        : theme.colorScheme.mutedForeground,
+                      color: enabled
+                          ? theme.colorScheme.foreground
+                          : theme.colorScheme.mutedForeground,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -401,14 +400,11 @@ class SwitchListTile extends StatelessWidget {
                 ],
               ),
             ),
-            
             if (trailing != null) ...[
               const SizedBox(width: AppDimensions.spacingM),
               trailing!,
             ],
-            
             const SizedBox(width: AppDimensions.spacingM),
-            
             ShadSwitch(
               value: value,
               onChanged: enabled ? onChanged : null,

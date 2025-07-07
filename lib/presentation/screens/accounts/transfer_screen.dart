@@ -173,6 +173,7 @@ class _TransferScreenState extends ConsumerState<TransferScreen> {
     final theme = ShadTheme.of(context);
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       backgroundColor: theme.colorScheme.primary.withOpacity(0.05),
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.paddingL),

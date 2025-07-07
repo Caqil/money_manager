@@ -46,6 +46,7 @@ class AccountBalanceCard extends ConsumerWidget {
       height: height,
       margin: margin ?? const EdgeInsets.all(AppDimensions.spacingS),
       child: ShadCard(
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -87,7 +88,7 @@ class AccountBalanceCard extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (showDetails) ...[
-                             SizedBox(height: AppDimensions.spacingXs),
+                            SizedBox(height: AppDimensions.spacingXs),
                             Text(
                               'accounts.types.${account.type.name}'.tr(),
                               style: theme.textTheme.muted,

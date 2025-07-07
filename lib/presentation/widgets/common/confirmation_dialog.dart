@@ -35,6 +35,7 @@ class ConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShadDialog(
       child: ShadCard(
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
         width: AppDimensions.modalMaxWidth,
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.paddingL),

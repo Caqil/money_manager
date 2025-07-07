@@ -47,9 +47,9 @@ class AccountItem extends ConsumerWidget {
     return Container(
       margin: margin,
       child: ShadCard(
-        backgroundColor: isSelected 
-            ? theme.colorScheme.accent.withOpacity(0.1)
-            : null,
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
+        backgroundColor:
+            isSelected ? theme.colorScheme.accent.withOpacity(0.1) : null,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -73,9 +73,9 @@ class AccountItem extends ConsumerWidget {
                     size: 24,
                   ),
                 ),
-                
+
                 const SizedBox(width: AppDimensions.spacingM),
-                
+
                 // Account Info
                 Expanded(
                   child: Column(
@@ -92,7 +92,7 @@ class AccountItem extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          
+
                           // Status indicators
                           if (!account.isActive) ...[
                             const SizedBox(width: AppDimensions.spacingS),
@@ -103,7 +103,8 @@ class AccountItem extends ConsumerWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.warning.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                                borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusXs),
                               ),
                               child: Text(
                                 'Inactive',
@@ -114,18 +115,20 @@ class AccountItem extends ConsumerWidget {
                               ),
                             ),
                           ],
-                          
+
                           if (isSelectable)
                             Icon(
-                              isSelected ? Icons.check_circle : Icons.circle_outlined,
-                              color: isSelected 
-                                  ? theme.colorScheme.primary 
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.circle_outlined,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
                                   : theme.colorScheme.mutedForeground,
                               size: 20,
                             ),
                         ],
                       ),
-                      
+
                       if (showSubtitle) ...[
                         const SizedBox(height: AppDimensions.spacingXs),
                         Row(
@@ -149,7 +152,7 @@ class AccountItem extends ConsumerWidget {
                           ],
                         ),
                       ],
-                      
+
                       if (showBalance) ...[
                         const SizedBox(height: AppDimensions.spacingS),
                         balanceAsync.when(
@@ -168,13 +171,14 @@ class AccountItem extends ConsumerWidget {
                               Text(
                                 _formatCurrency(balance, account.currency),
                                 style: theme.textTheme.h3.copyWith(
-                                  color: _getBalanceColor(balance, account.type),
+                                  color:
+                                      _getBalanceColor(balance, account.type),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              
+
                               // Available balance for credit cards
-                              if (account.type == AccountType.creditCard && 
+                              if (account.type == AccountType.creditCard &&
                                   account.creditLimit != null) ...[
                                 const SizedBox(height: 2),
                                 Text(
@@ -191,7 +195,7 @@ class AccountItem extends ConsumerWidget {
                     ],
                   ),
                 ),
-                
+
                 // Actions
                 if (showActions && !isSelectable) ...[
                   const SizedBox(width: AppDimensions.spacingS),
@@ -237,7 +241,8 @@ class AccountItem extends ConsumerWidget {
                           value: 'delete',
                           child: Row(
                             children: [
-                              const Icon(Icons.delete, size: 16, color: AppColors.error),
+                              const Icon(Icons.delete,
+                                  size: 16, color: AppColors.error),
                               const SizedBox(width: AppDimensions.spacingS),
                               Text(
                                 'common.delete'.tr(),
@@ -385,9 +390,9 @@ class AccountItemCompact extends ConsumerWidget {
                 size: 16,
               ),
             ),
-            
+
             const SizedBox(width: AppDimensions.spacingS),
-            
+
             // Account Info
             Expanded(
               child: Column(
@@ -413,7 +418,7 @@ class AccountItemCompact extends ConsumerWidget {
                 ],
               ),
             ),
-            
+
             if (isSelected)
               const Icon(
                 Icons.check,

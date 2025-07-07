@@ -249,6 +249,7 @@ class _CustomRadioGroupState<T> extends State<CustomRadioGroup<T>> {
     final isEnabled = widget.enabled && item.enabled;
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       backgroundColor:
           isSelected ? theme.colorScheme.accent.withOpacity(0.1) : null,
       border: Border.all(
@@ -482,6 +483,7 @@ class RadioCard<T> extends StatelessWidget {
     final isSelected = groupValue == value;
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       backgroundColor:
           isSelected ? theme.colorScheme.accent.withOpacity(0.1) : null,
       border: Border.all(

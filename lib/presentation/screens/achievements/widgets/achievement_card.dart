@@ -91,6 +91,7 @@ class _AchievementCardState extends ConsumerState<AchievementCard>
           child: SlideTransition(
             position: _slideAnimation,
             child: ShadCard(
+              padding: const EdgeInsets.all(AppDimensions.paddingS),
               child: Padding(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
                 child: Column(
@@ -198,7 +199,6 @@ class _AchievementCardState extends ConsumerState<AchievementCard>
       title: 'Error loading achievements',
       message: error.toString(),
       actionText: 'common.retry'.tr(),
-      onActionPressed: () => ref.refresh(_getBadgesProvider()),
     );
   }
 

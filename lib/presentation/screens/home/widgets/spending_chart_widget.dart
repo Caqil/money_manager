@@ -11,6 +11,7 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../providers/analytics_provider.dart';
 import '../../../widgets/common/loading_widget.dart';
 import '../../../widgets/common/error_widget.dart';
+import '../../analytics/widgets/date_range_selector.dart';
 
 class SpendingChartWidget extends ConsumerStatefulWidget {
   const SpendingChartWidget({super.key});
@@ -32,6 +33,7 @@ class _SpendingChartWidgetState extends ConsumerState<SpendingChartWidget> {
     final spendingDataAsync = ref.watch(spendingByCategoryProvider(dateRange));
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.paddingM),
         child: Column(

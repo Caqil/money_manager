@@ -14,7 +14,8 @@ import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/loading_widget.dart';
 import 'widgets/account_balance_card.dart';
-import 'widgets/account_item.dart'; 
+import 'widgets/account_item.dart';
+
 class AccountListScreen extends ConsumerStatefulWidget {
   const AccountListScreen({super.key});
 
@@ -147,6 +148,7 @@ class _AccountListScreenState extends ConsumerState<AccountListScreen>
     return Container(
       margin: const EdgeInsets.all(AppDimensions.spacingM),
       child: ShadCard(
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
         backgroundColor: theme.colorScheme.primary.withOpacity(0.05),
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.paddingL),

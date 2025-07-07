@@ -20,13 +20,11 @@ import 'data/services/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-  // Initialize Hive
-  await Hive.initFlutter();
 
-  // Register Hive Adapters
+  // Register Hive Adapters BEFORE initializing HiveService
   _registerHiveAdapters();
 
-  // Initialize Services
+  // Initialize Services (HiveService will handle Hive.initFlutter())
   await HiveService.init();
   await NotificationService.init();
 
@@ -44,12 +42,67 @@ void main() async {
 }
 
 void _registerHiveAdapters() {
-  Hive.registerAdapter(TransactionAdapter());
-  Hive.registerAdapter(BudgetAdapter());
-  Hive.registerAdapter(AccountAdapter());
-  Hive.registerAdapter(GoalAdapter());
-  Hive.registerAdapter(CategoryAdapter());
-  Hive.registerAdapter(RecurringTransactionAdapter());
-  Hive.registerAdapter(SplitExpenseAdapter());
-  Hive.registerAdapter(BadgeAdapter());
+  // Register model adapters
+  if (!Hive.isAdapterRegistered(1)) {
+    Hive.registerAdapter(TransactionAdapter());
+  }
+  if (!Hive.isAdapterRegistered(2)) {
+    Hive.registerAdapter(BudgetAdapter());
+  }
+  if (!Hive.isAdapterRegistered(3)) {
+    Hive.registerAdapter(AccountAdapter());
+  }
+  if (!Hive.isAdapterRegistered(4)) {
+    Hive.registerAdapter(GoalAdapter());
+  }
+  if (!Hive.isAdapterRegistered(5)) {
+    Hive.registerAdapter(CategoryAdapter());
+  }
+  if (!Hive.isAdapterRegistered(7)) {
+    Hive.registerAdapter(RecurringTransactionAdapter());
+  }
+  if (!Hive.isAdapterRegistered(8)) {
+    Hive.registerAdapter(SplitExpenseAdapter());
+  }
+  if (!Hive.isAdapterRegistered(9)) {
+    Hive.registerAdapter(BadgeAdapter());
+  }
+
+  // Register enum adapters - THESE ARE CRITICAL!
+  if (!Hive.isAdapterRegistered(11)) {
+    Hive.registerAdapter(TransactionTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(12)) {
+    Hive.registerAdapter(BudgetPeriodAdapter());
+  }
+  if (!Hive.isAdapterRegistered(13)) {
+    Hive.registerAdapter(BudgetRolloverTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(14)) {
+    Hive.registerAdapter(AccountTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(15)) {
+    Hive.registerAdapter(GoalTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(16)) {
+    Hive.registerAdapter(GoalPriorityAdapter());
+  }
+  if (!Hive.isAdapterRegistered(17)) {
+    Hive.registerAdapter(GoalMilestoneAdapter());
+  }
+  if (!Hive.isAdapterRegistered(18)) {
+    Hive.registerAdapter(RecurrenceFrequencyAdapter());
+  }
+  if (!Hive.isAdapterRegistered(19)) {
+    Hive.registerAdapter(CategoryTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(20)) {
+    Hive.registerAdapter(SplitParticipantAdapter());
+  }
+  if (!Hive.isAdapterRegistered(21)) {
+    Hive.registerAdapter(SplitTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(22)) {
+    Hive.registerAdapter(SplitStatusAdapter());
+  }
 }

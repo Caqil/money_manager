@@ -11,6 +11,7 @@ import '../../data/models/goal.dart';
 import '../../core/enums/transaction_type.dart';
 import '../../core/utils/date_utils.dart';
 import '../../core/errors/exceptions.dart';
+import '../screens/analytics/widgets/date_range_selector.dart';
 
 // Repository providers
 final transactionRepositoryProvider = Provider<TransactionRepository>(
@@ -497,14 +498,6 @@ List<String> _generateRecommendations(
   }
 
   return recommendations;
-}
-
-// Data classes for analytics
-class DateRange {
-  final DateTime start;
-  final DateTime end;
-
-  const DateRange({required this.start, required this.end});
 }
 
 class AnalyticsParams {

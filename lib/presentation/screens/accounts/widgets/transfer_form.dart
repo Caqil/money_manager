@@ -393,6 +393,7 @@ class _TransferFormState extends ConsumerState<TransferForm> {
     final amount = double.tryParse(_amountController.text.trim()) ?? 0.0;
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       backgroundColor: theme.colorScheme.accent.withOpacity(0.05),
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.paddingM),

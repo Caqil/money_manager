@@ -1,6 +1,14 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/errors/exceptions.dart';
+import '../models/account.dart';
+import '../models/transaction.dart';
+import '../models/budget.dart';
+import '../models/goal.dart';
+import '../models/category.dart';
+import '../models/recurring_transaction.dart';
+import '../models/split_expense.dart';
+import '../models/badge.dart';
 
 class HiveService {
   static HiveService? _instance;
@@ -17,61 +25,108 @@ class HiveService {
   static Future<void> init() async {
     try {
       await Hive.initFlutter();
-      
-      // Initialize all boxes
+
+      // Initialize all boxes with proper types
       await _openAllBoxes();
     } catch (e) {
       throw DatabaseException(message: 'Failed to initialize Hive: $e');
     }
   }
 
-  // Open all required boxes
+  // Open all required boxes with proper types
   static Future<void> _openAllBoxes() async {
-    final boxNames = [
-      AppConstants.hiveBoxTransactions,
-      AppConstants.hiveBoxBudgets,
-      AppConstants.hiveBoxAccounts,
-      AppConstants.hiveBoxGoals,
-      AppConstants.hiveBoxCategories,
-      AppConstants.hiveBoxRecurringTransactions,
-      AppConstants.hiveBoxSplitExpenses,
-      AppConstants.hiveBoxBadges,
-      AppConstants.hiveBoxCurrencyRates,
-      AppConstants.hiveBoxCurrencies,
-      AppConstants.hiveBoxSettings,
-      AppConstants.hiveBoxUserData,
-    ];
+    try {
+      // Open typed boxes for models
+      await _openTypedBox<Account>(AppConstants.hiveBoxAccounts);
+      await _openTypedBox<Transaction>(AppConstants.hiveBoxTransactions);
+      await _openTypedBox<Budget>(AppConstants.hiveBoxBudgets);
+      await _openTypedBox<Goal>(AppConstants.hiveBoxGoals);
+      await _openTypedBox<Category>(AppConstants.hiveBoxCategories);
+      await _openTypedBox<RecurringTransaction>(
+          AppConstants.hiveBoxRecurringTransactions);
+      await _openTypedBox<SplitExpense>(AppConstants.hiveBoxSplitExpenses);
+      await _openTypedBox<Badge>(AppConstants.hiveBoxBadges);
 
-    for (final boxName in boxNames) {
-      try {
-        if (!Hive.isBoxOpen(boxName)) {
-          final box = await Hive.openBox(boxName);
-          _openBoxes[boxName] = box;
-        }
-      } catch (e) {
-        throw DatabaseException(message: 'Failed to open box $boxName: $e');
-      }
+      // Open dynamic boxes for settings and other data
+      await _openDynamicBox(AppConstants.hiveBoxCurrencyRates);
+      await _openDynamicBox(AppConstants.hiveBoxCurrencies);
+      await _openDynamicBox(AppConstants.hiveBoxSettings);
+      await _openDynamicBox(AppConstants.hiveBoxUserData);
+    } catch (e) {
+      throw DatabaseException(message: 'Failed to open boxes: $e');
     }
   }
 
-  // Get a specific box
+  // Helper method to open typed boxes
+  static Future<void> _openTypedBox<T>(String boxName) async {
+    if (!Hive.isBoxOpen(boxName)) {
+      final box = await Hive.openBox<T>(boxName);
+      _openBoxes[boxName] = box;
+    } else {
+      _openBoxes[boxName] = Hive.box<T>(boxName);
+    }
+  }
+
+  // Helper method to open dynamic boxes
+  static Future<void> _openDynamicBox(String boxName) async {
+    if (!Hive.isBoxOpen(boxName)) {
+      final box = await Hive.openBox(boxName);
+      _openBoxes[boxName] = box;
+    } else {
+      _openBoxes[boxName] = Hive.box(boxName);
+    }
+  }
+
+  // Get a specific typed box
   Future<Box<T>> getBox<T>(String boxName) async {
     try {
+      // Check if box is already open and cached
       if (_openBoxes.containsKey(boxName)) {
-        return _openBoxes[boxName]! as Box<T>;
+        final box = _openBoxes[boxName]!;
+        if (box is Box<T>) {
+          return box;
+        } else {
+          throw DatabaseException(
+              message: 'Box $boxName is not of type Box<${T.toString()}>. '
+                  'Actual type: ${box.runtimeType}');
+        }
       }
 
+      // If box isn't cached, try to open it
       if (Hive.isBoxOpen(boxName)) {
         final box = Hive.box<T>(boxName);
         _openBoxes[boxName] = box;
         return box;
       }
 
+      // Open new typed box
       final box = await Hive.openBox<T>(boxName);
       _openBoxes[boxName] = box;
       return box;
     } catch (e) {
       throw DatabaseException(message: 'Failed to get box $boxName: $e');
+    }
+  }
+
+  // Get a dynamic box (for settings, etc.)
+  Future<Box> getDynamicBox(String boxName) async {
+    try {
+      if (_openBoxes.containsKey(boxName)) {
+        return _openBoxes[boxName]!;
+      }
+
+      if (Hive.isBoxOpen(boxName)) {
+        final box = Hive.box(boxName);
+        _openBoxes[boxName] = box;
+        return box;
+      }
+
+      final box = await Hive.openBox(boxName);
+      _openBoxes[boxName] = box;
+      return box;
+    } catch (e) {
+      throw DatabaseException(
+          message: 'Failed to get dynamic box $boxName: $e');
     }
   }
 
@@ -102,7 +157,7 @@ class HiveService {
   // Clear a specific box
   Future<void> clearBox(String boxName) async {
     try {
-      final box = await getBox(boxName);
+      final box = await getDynamicBox(boxName);
       await box.clear();
     } catch (e) {
       throw DatabaseException(message: 'Failed to clear box $boxName: $e');
@@ -131,13 +186,13 @@ class HiveService {
   // Get box data for backup
   Future<Map<String, dynamic>> getBoxData(String boxName) async {
     try {
-      final box = await getBox(boxName);
+      final box = await getDynamicBox(boxName);
       final data = <String, dynamic>{};
-      
+
       for (final key in box.keys) {
         data[key.toString()] = box.get(key);
       }
-      
+
       return data;
     } catch (e) {
       throw DatabaseException(message: 'Failed to get box data $boxName: $e');
@@ -147,21 +202,22 @@ class HiveService {
   // Restore box data from backup
   Future<void> restoreBoxData(String boxName, Map<String, dynamic> data) async {
     try {
-      final box = await getBox(boxName);
+      final box = await getDynamicBox(boxName);
       await box.clear();
-      
+
       for (final entry in data.entries) {
         await box.put(entry.key, entry.value);
       }
     } catch (e) {
-      throw DatabaseException(message: 'Failed to restore box data $boxName: $e');
+      throw DatabaseException(
+          message: 'Failed to restore box data $boxName: $e');
     }
   }
 
   // Compact a box (optimize storage)
   Future<void> compactBox(String boxName) async {
     try {
-      final box = await getBox(boxName);
+      final box = await getDynamicBox(boxName);
       await box.compact();
     } catch (e) {
       throw DatabaseException(message: 'Failed to compact box $boxName: $e');
@@ -171,8 +227,8 @@ class HiveService {
   // Get box size information
   Future<BoxInfo> getBoxInfo(String boxName) async {
     try {
-      final box = await getBox(boxName);
-      
+      final box = await getDynamicBox(boxName);
+
       return BoxInfo(
         name: boxName,
         length: box.length,
@@ -203,7 +259,7 @@ class HiveService {
     ];
 
     final infos = <BoxInfo>[];
-    
+
     for (final boxName in boxNames) {
       try {
         final info = await getBoxInfo(boxName);
@@ -213,7 +269,7 @@ class HiveService {
         continue;
       }
     }
-    
+
     return infos;
   }
 

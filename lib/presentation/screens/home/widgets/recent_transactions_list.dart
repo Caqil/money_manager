@@ -21,6 +21,7 @@ class RecentTransactionsList extends ConsumerWidget {
     final recentTransactionsAsync = ref.watch(recentTransactionsProvider(5));
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.paddingM),
         child: Column(
@@ -146,7 +147,8 @@ class RecentTransactionsList extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context) {
     final theme = ShadTheme.of(context);
 
-    return Column(
+    return Center(
+        child: Column(
       children: [
         Icon(
           Icons.receipt_long_outlined,
@@ -176,7 +178,7 @@ class RecentTransactionsList extends ConsumerWidget {
           child: Text('quickActions.addExpense'.tr()),
         ),
       ],
-    );
+    ));
   }
 
   Widget _buildTransactionItem(BuildContext context, Transaction transaction) {

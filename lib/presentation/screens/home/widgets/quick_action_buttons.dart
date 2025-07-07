@@ -15,6 +15,7 @@ class QuickActionButtons extends ConsumerWidget {
     final theme = ShadTheme.of(context);
 
     return ShadCard(
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: Padding(
         padding: const EdgeInsets.all(AppDimensions.paddingM),
         child: Column(

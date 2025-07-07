@@ -60,51 +60,51 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'home',
             builder: (context, state) => const HomeScreen(),
           ),
-          // GoRoute(
-          //   path: RouteNames.transactions,
-          //   name: 'transactions',
-          //   builder: (context, state) => const TransactionListScreen(),
-          //   routes: [
-          //     GoRoute(
-          //       path: '/add',
-          //       name: 'add-transaction',
-          //       builder: (context, state) => const AddEditTransactionScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: '/edit/:id',
-          //       name: 'edit-transaction',
-          //       builder: (context, state) {
-          //         final id = state.pathParameters['id']!;
-          //         return AddEditTransactionScreen(transactionId: id);
-          //       },
-          //     ),
-          //   ],
-          // ),
-          // GoRoute(
-          //   path: RouteNames.budgets,
-          //   name: 'budgets',
-          //   builder: (context, state) => const BudgetListScreen(),
-          // ),
-          // GoRoute(
-          //   path: RouteNames.analytics,
-          //   name: 'analytics',
-          //   builder: (context, state) => const AnalyticsScreen(),
-          // ),
-          // GoRoute(
-          //   path: RouteNames.goals,
-          //   name: 'goals',
-          //   builder: (context, state) => const GoalListScreen(),
-          // ),
+          GoRoute(
+            path: RouteNames.transactions,
+            name: 'transactions',
+            builder: (context, state) => const TransactionListScreen(),
+            routes: [
+              GoRoute(
+                path: '/add',
+                name: 'add-transaction',
+                builder: (context, state) => const AddEditTransactionScreen(),
+              ),
+              GoRoute(
+                path: '/edit/:id',
+                name: 'edit-transaction',
+                builder: (context, state) {
+                  final id = state.pathParameters['id']!;
+                  return AddEditTransactionScreen(transactionId: id);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: RouteNames.budgets,
+            name: 'budgets',
+            builder: (context, state) => const BudgetListScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.analytics,
+            name: 'analytics',
+            builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.goals,
+            name: 'goals',
+            builder: (context, state) => const GoalListScreen(),
+          ),
           GoRoute(
             path: RouteNames.accounts,
             name: 'accounts',
             builder: (context, state) => const AccountListScreen(),
           ),
-          // GoRoute(
-          //   path: RouteNames.settings,
-          //   name: 'settings',
-          //   builder: (context, state) => const SettingsScreen(),
-          // ),
+          GoRoute(
+            path: RouteNames.settings,
+            name: 'settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
         ],
       ),
     ],

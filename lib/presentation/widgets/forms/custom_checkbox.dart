@@ -298,9 +298,8 @@ class _CustomCheckboxGroupState<T> extends State<CustomCheckboxGroup<T>> {
 
       return CustomCheckbox(
         value: isSelected,
-        onChanged: isDisabled
-            ? null
-            : (value) => _onItemChanged(item.value, value),
+        onChanged:
+            isDisabled ? null : (value) => _onItemChanged(item.value, value),
         labelText: item.title,
         sublabelText: item.subtitle,
         enabled: !isDisabled,
@@ -419,7 +418,7 @@ class CheckboxCard extends StatelessWidget {
     final theme = ShadTheme.of(context);
 
     return ShadCard(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingS),
       child: InkWell(
         onTap: enabled ? () => onChanged?.call(!value) : null,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),

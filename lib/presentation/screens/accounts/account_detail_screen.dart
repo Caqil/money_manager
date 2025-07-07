@@ -334,6 +334,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
       children: [
         // Account Information Card
         ShadCard(
+          padding: const EdgeInsets.all(AppDimensions.paddingS),
           child: Padding(
             padding: const EdgeInsets.all(AppDimensions.paddingM),
             child: Column(

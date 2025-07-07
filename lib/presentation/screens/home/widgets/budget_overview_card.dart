@@ -76,6 +76,7 @@ class _BudgetOverviewCardState extends ConsumerState<BudgetOverviewCard>
           child: SlideTransition(
             position: _slideAnimation,
             child: ShadCard(
+              padding: const EdgeInsets.all(AppDimensions.paddingS),
               child: Padding(
                 padding: const EdgeInsets.all(AppDimensions.paddingM),
                 child: Column(
@@ -345,7 +346,8 @@ class _BudgetOverviewCardState extends ConsumerState<BudgetOverviewCard>
   Widget _buildEmptyState() {
     final theme = ShadTheme.of(context);
 
-    return Column(
+    return Center(
+        child: Column(
       children: [
         Icon(
           Icons.pie_chart_outline,
@@ -370,7 +372,7 @@ class _BudgetOverviewCardState extends ConsumerState<BudgetOverviewCard>
           child: Text('budgets.addBudget'.tr()),
         ),
       ],
-    );
+    ));
   }
 
   Widget _buildSummaryCard({
