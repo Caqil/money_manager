@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:money_manager/presentation/pages/main/main_layout.dart';
@@ -10,11 +9,9 @@ import '../screens/transactions/transaction_list_screen.dart';
 import '../screens/transactions/add_edit_transaction_screen.dart';
 import '../screens/budgets/budget_list_screen.dart';
 import '../screens/analytics/analytics_screen.dart';
-import '../screens/goals/goal_list_screen.dart';
 import '../screens/accounts/account_list_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/common/custom_bottom_navigation.dart';
 import 'route_names.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -90,11 +87,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'analytics',
             builder: (context, state) => const AnalyticsScreen(),
           ),
-          GoRoute(
-            path: RouteNames.goals,
-            name: 'goals',
-            builder: (context, state) => const GoalListScreen(),
-          ),
+          // GoRoute(
+          //   path: RouteNames.goals,
+          //   name: 'goals',
+          //   builder: (context, state) => const GoalListScreen(),
+          // ),
           GoRoute(
             path: RouteNames.accounts,
             name: 'accounts',

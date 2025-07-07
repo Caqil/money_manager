@@ -312,6 +312,7 @@ class SettingsSection extends StatelessWidget {
             ),
           ],
           ShadCard(
+            padding: const EdgeInsets.all(AppDimensions.paddingS),
             child: Column(
               children: children,
             ),

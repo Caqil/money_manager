@@ -158,14 +158,14 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
                     ),
                 ],
               ),
-              tooltip: 'transactions.filters'.tr(),
+              tooltip: 'transactions.filters.all'.tr(),
             ),
             ShadPopover(
               popover: (context) => _buildMoreActionsMenu(),
               child: IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.more_vert),
-                tooltip: 'common.moreActions'.tr(),
+                //tooltip: 'common.moreActions'.tr(),
               ),
             ),
           ],

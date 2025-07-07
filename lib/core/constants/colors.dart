@@ -29,6 +29,9 @@ class AppColors {
   static const Color expense = Color(0xFFEF4444); // Red
   static const Color transfer = Color(0xFF6366F1); // Indigo
 
+  // Text Colors
+  static const Color mutedForeground = Color(0xFF6B7280); // Gray-500
+
   // Category Colors
   static const List<Color> categoryColors = [
     Color(0xFFEF4444), // Red
