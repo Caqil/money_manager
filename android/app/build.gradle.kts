@@ -8,9 +8,12 @@ plugins {
 android {
     namespace = "com.example.money_manager"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.1.12297006"
 
     compileOptions {
+        // Flag to enable support for the new language APIs
+        isCoreLibraryDesugaringEnabled = true
+        // Sets Java compatibility to Java 11
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -41,4 +44,7 @@ android {
 
 flutter {
     source = "../.."
+}
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

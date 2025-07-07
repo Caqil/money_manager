@@ -275,28 +275,16 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
                       : null,
                   backgroundColor:
                       isSelected ? _getTypeColor(type).withOpacity(0.1) : null,
-                  child: Column(
-                    children: [
-                      Icon(
-                        _getTypeIcon(type),
-                        color: isSelected
-                            ? _getTypeColor(type)
-                            : theme.colorScheme.mutedForeground,
-                        size: 20,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXs),
-                      Text(
-                        _getTypeDisplayName(type),
-                        style: TextStyle(
-                          color: isSelected
-                              ? _getTypeColor(type)
-                              : theme.colorScheme.mutedForeground,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w400,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    _getTypeDisplayName(type),
+                    style: TextStyle(
+                      color: isSelected
+                          ? _getTypeColor(type)
+                          : theme.colorScheme.mutedForeground,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),

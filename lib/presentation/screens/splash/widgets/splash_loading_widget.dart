@@ -129,7 +129,7 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
   @override
   void didUpdateWidget(SplashLoadingWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Update progress animation when progress changes
     if (widget.progress != oldWidget.progress && widget.progress != null) {
       _progressAnimation = Tween<double>(
@@ -156,10 +156,12 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
     if (!widget.showLogo) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
-    final effectivePrimaryColor = widget.primaryColor ?? theme.colorScheme.primary;
+    final effectivePrimaryColor =
+        widget.primaryColor ?? theme.colorScheme.primary;
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_logoScaleAnimation, _logoOpacityAnimation, _pulseAnimation]),
+      animation: Listenable.merge(
+          [_logoScaleAnimation, _logoOpacityAnimation, _pulseAnimation]),
       builder: (context, child) {
         return Transform.scale(
           scale: _logoScaleAnimation.value * _pulseAnimation.value,
@@ -200,7 +202,7 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
 
   Widget _buildAppInfo() {
     final theme = Theme.of(context);
-    
+
     return AnimatedBuilder(
       animation: _logoOpacityAnimation,
       builder: (context, child) {
@@ -216,9 +218,7 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
                 ),
                 textAlign: TextAlign.center,
               ),
-              
               const SizedBox(height: AppDimensions.spacingS),
-              
               Text(
                 'app.tagline'.tr(),
                 style: AppTextStyles.bodyLarge.copyWith(
@@ -235,7 +235,8 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
 
   Widget _buildLoadingIndicator() {
     final theme = Theme.of(context);
-    final effectivePrimaryColor = widget.primaryColor ?? theme.colorScheme.primary;
+    final effectivePrimaryColor =
+        widget.primaryColor ?? theme.colorScheme.primary;
 
     return AnimatedBuilder(
       animation: _logoOpacityAnimation,
@@ -269,9 +270,9 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
                     },
                   ),
                 ),
-                
+
                 const SizedBox(height: AppDimensions.spacingM),
-                
+
                 // Progress percentage
                 AnimatedBuilder(
                   animation: _progressAnimation,
@@ -293,18 +294,19 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
                   height: AppDimensions.progressIndicatorSize,
                   child: CircularProgressIndicator(
                     strokeWidth: AppDimensions.progressIndicatorStroke,
-                    valueColor: AlwaysStoppedAnimation<Color>(effectivePrimaryColor),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(effectivePrimaryColor),
                   ),
                 ),
               ],
-              
               if (widget.message != null) ...[
                 const SizedBox(height: AppDimensions.spacingL),
                 Text(
                   widget.message!,
-                  style: widget.messageStyle ?? AppTextStyles.bodyMedium.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
+                  style: widget.messageStyle ??
+                      AppTextStyles.bodyMedium.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -315,30 +317,11 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
     );
   }
 
-  Widget _buildVersionInfo() {
-    final theme = Theme.of(context);
-
-    return AnimatedBuilder(
-      animation: _logoOpacityAnimation,
-      builder: (context, child) {
-        return Opacity(
-          opacity: _logoOpacityAnimation.value * 0.6,
-          child: Text(
-            'app.version'.tr(),
-            style: AppTextStyles.bodySmall.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveBackgroundColor = widget.backgroundColor ?? theme.colorScheme.surface;
+    final effectiveBackgroundColor =
+        widget.backgroundColor ?? theme.colorScheme.surface;
 
     return Container(
       width: double.infinity,
@@ -360,25 +343,22 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Spacer(flex: 2),
-            
+
             // Logo
             _buildLogo(),
-            
+
             const SizedBox(height: AppDimensions.spacingXl),
-            
+
             // App info
             _buildAppInfo(),
-            
+
             const SizedBox(height: AppDimensions.spacingXxl * 2),
-            
+
             // Loading indicator
             _buildLoadingIndicator(),
-            
+
             const Spacer(flex: 3),
-            
-            // Version info
-            _buildVersionInfo(),
-            
+
             const SizedBox(height: AppDimensions.spacingL),
           ],
         ),

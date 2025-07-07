@@ -32,7 +32,7 @@ void main() async {
 
   // CRITICAL: Initialize both AuthService AND SettingsService before running the app
   await AuthService.init();
-  await SettingsService.init(); // ADD: Initialize SettingsService
+  await SettingsService.init();
 
   runApp(
     ProviderScope(
@@ -73,7 +73,13 @@ void _registerHiveAdapters() {
   if (!Hive.isAdapterRegistered(9)) {
     Hive.registerAdapter(BadgeAdapter());
   }
-
-  // Register enum adapters - THESE ARE CRITICAL!
-  // Add any enum adapters you have...
+  if (!Hive.isAdapterRegistered(11)) {
+    Hive.registerAdapter(TransactionTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(14)) {
+    Hive.registerAdapter(AccountTypeAdapter());
+  }
+  if (!Hive.isAdapterRegistered(19)) {
+    Hive.registerAdapter(CategoryTypeAdapter());
+  }
 }

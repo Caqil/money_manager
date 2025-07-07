@@ -9,7 +9,11 @@ import '../screens/accounts/account_details_screen.dart';
 import '../screens/accounts/account_transactions_screen.dart';
 import '../screens/accounts/transfer_funds_screen.dart';
 import '../screens/analytics/category_analytics_screen.dart';
+import '../screens/analytics/custom_analytics_screen.dart';
+import '../screens/analytics/financial_health_screen.dart';
 import '../screens/analytics/income_expense_analytics_screen.dart';
+import '../screens/analytics/monthly_analytics_screen.dart';
+import '../screens/analytics/yearly_analytics_screen.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/login_screen.dart';
@@ -254,26 +258,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'category-analytics',
                 builder: (context, state) => const CategoryAnalyticsScreen(),
               ),
-              // GoRoute(
-              //   path: 'monthly',
-              //   name: 'monthly-analytics',
-              //   builder: (context, state) => const MonthlyAnalyticsScreen(),
-              // ),
-              // GoRoute(
-              //   path: 'yearly',
-              //   name: 'yearly-analytics',
-              //   builder: (context, state) => const YearlyAnalyticsScreen(),
-              // ),
-              // GoRoute(
-              //   path: 'custom',
-              //   name: 'custom-analytics',
-              //   builder: (context, state) => const CustomAnalyticsScreen(),
-              // ),
-              // GoRoute(
-              //   path: 'financial-health',
-              //   name: 'financial-health',
-              //   builder: (context, state) => const FinancialHealthScreen(),
-              // ),
+              GoRoute(
+                path: 'monthly',
+                name: 'monthly-analytics',
+                builder: (context, state) => const MonthlyAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'yearly',
+                name: 'yearly-analytics',
+                builder: (context, state) => const YearlyAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'custom',
+                name: 'custom-analytics',
+                builder: (context, state) => const CustomAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'financial-health',
+                name: 'financial-health',
+                builder: (context, state) => const FinancialHealthScreen(),
+              ),
               // GoRoute(
               //   path: 'export',
               //   name: 'export-data',
