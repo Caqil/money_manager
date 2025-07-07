@@ -138,10 +138,8 @@ class _AddEditTransactionScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header section
-              _buildHeader(transaction),
               const SizedBox(height: AppDimensions.spacingL),
-
+              _buildQuickTips(),
               // Form
               TransactionForm(
                 transaction: transaction,
@@ -157,40 +155,6 @@ class _AddEditTransactionScreenState
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader(Transaction? transaction) {
-    final theme = ShadTheme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title
-        Text(
-          isEditing
-              ? 'transactions.editTransactionTitle'.tr()
-              : 'transactions.addTransactionTitle'.tr(),
-          style: theme.textTheme.h2,
-        ),
-        const SizedBox(height: AppDimensions.spacingS),
-
-        // Subtitle
-        Text(
-          isEditing
-              ? 'transactions.editTransactionSubtitle'.tr()
-              : 'transactions.addTransactionSubtitle'.tr(),
-          style: theme.textTheme.p.copyWith(
-            color: theme.colorScheme.mutedForeground,
-          ),
-        ),
-
-        // Quick action tips (only for new transactions)
-        if (!isEditing) ...[
-          const SizedBox(height: AppDimensions.spacingM),
-          _buildQuickTips(),
-        ],
-      ],
     );
   }
 
@@ -469,7 +433,6 @@ ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
         variant: ShadToastVariant.primary,
         description: Text(message),
         backgroundColor: AppColors.success,
-       
       ),
     );
 
@@ -484,7 +447,6 @@ ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
         variant: ShadToastVariant.primary,
         description: Text(message),
         backgroundColor: AppColors.error,
-       
       ),
     );
   }

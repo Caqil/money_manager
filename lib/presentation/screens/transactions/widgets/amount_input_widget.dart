@@ -238,7 +238,7 @@ class _AmountInputWidgetState extends ConsumerState<AmountInputWidget> {
                 focusNode: _focusNode,
                 enabled: widget.enabled,
                 placeholder:
-                    Text(widget.placeholder ?? 'transactions.enterAmount'.tr()),
+                    Text(widget.placeholder ?? 'forms.enterAmount'.tr()),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 inputFormatters: [

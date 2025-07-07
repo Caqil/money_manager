@@ -67,25 +67,64 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: RouteNames.splash,
     redirect: (context, state) {
       final currentLocation = state.matchedLocation;
-      final settingsState = ref.read(settingsStateProvider);
+
+      // FIXED: Add navigation guard to prevent redirects during normal app usage
+      final isInMainApp = currentLocation.startsWith('/') &&
+          currentLocation != RouteNames.splash &&
+          currentLocation != RouteNames.onboarding &&
+          currentLocation != RouteNames.login;
+
+      print('🧭 Router Redirect Check:');
+      print('  Current: $currentLocation');
+      print('  IsInMainApp: $isInMainApp');
+      print('  FirstLaunch: ${settingsState.isFirstLaunch}');
+      print('  Auth: ${authState.isAuthenticated}');
 
       // IMPORTANT: Let splash handle its own navigation
       if (currentLocation == RouteNames.splash) {
+        print('🎯 At splash - no redirect');
         return null;
       }
 
       // IMPORTANT: Don't redirect if already on onboarding
       if (currentLocation == RouteNames.onboarding) {
+        print('🎯 At onboarding - no redirect');
         return null;
       }
 
-      // Only redirect TO onboarding if first launch
+      // FIXED: Don't redirect if user is already using the main app
+      // This prevents the settings action issue
+      if (isInMainApp && !settingsState.isLoading) {
+        print('🎯 In main app - no redirect needed');
+        return null;
+      }
+
+      // Only redirect TO onboarding if first launch AND not in main app
       if (settingsState.isFirstLaunch &&
+          !isInMainApp &&
           currentLocation != RouteNames.onboarding &&
           currentLocation != RouteNames.splash) {
+        print('🎯 Redirecting to onboarding');
         return RouteNames.onboarding;
       }
 
+      // Auth redirects only for specific routes
+      final requiresAuth = [
+        RouteNames.home,
+        RouteNames.accounts,
+        RouteNames.transactions,
+        RouteNames.analytics,
+      ].any((route) => currentLocation.startsWith(route));
+
+      if (requiresAuth &&
+          authState.isPinEnabled &&
+          !authState.isAuthenticated &&
+          currentLocation != RouteNames.login) {
+        print('🎯 Redirecting to login');
+        return RouteNames.login;
+      }
+
+      print('🎯 No redirect needed');
       return null;
     },
     routes: [

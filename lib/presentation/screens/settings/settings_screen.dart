@@ -26,17 +26,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    // Load settings when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(settingsStateProvider.notifier).loadSettings();
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsStateProvider);
     final authState = ref.watch(authStateProvider);
-
     return Scaffold(
       appBar: CustomAppBar(
         title: 'settings.title'.tr(),

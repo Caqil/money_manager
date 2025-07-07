@@ -426,7 +426,7 @@ class _DuplicateTransactionScreenState
           const SizedBox(height: AppDimensions.spacingS),
           ShadInputFormField(
             controller: _amountController,
-            placeholder: Text('transactions.enterAmount'.tr()),
+            placeholder: Text('forms.enterAmount'.tr()),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             enabled: !_isLoading,
             validator: (value) => ValidationHelper.getAmountErrorMessage(value),

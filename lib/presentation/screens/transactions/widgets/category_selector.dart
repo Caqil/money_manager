@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../core/constants/colors.dart';
@@ -532,7 +533,8 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
             onPressed: () {
               Navigator.of(context).pop();
               // Navigate to create category screen
-              // context.push('/categories/add?type=${widget.transactionType?.name}');
+              context
+                  .push('/categories/add?type=${widget.transactionType?.name}');
             },
             child: Text('categories.createCategory'.tr()),
           ),

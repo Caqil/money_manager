@@ -424,14 +424,14 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
 
   String? _validateAmount(double? amount) {
     if (amount == null || amount <= 0) {
-      return 'transactions.amountRequired'.tr();
+      return 'validation.invalidAmount'.tr();
     }
     return null;
   }
 
   String? _validateAccount(Account? account) {
     if (account == null) {
-      return 'transactions.accountRequired'.tr();
+      return 'validation.accountRequired'.tr();
     }
     return null;
   }

@@ -174,13 +174,17 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
 
     return ShadSelectFormField<String>(
       enabled: widget.enabled,
-      placeholder: Text(widget.placeholder ?? 'accounts.selectAccount'.tr()),
-      options: filteredAccounts.map((account) => ShadOption(
-        value: account.id,
-        child: _buildAccountOption(account),
-      )).toList(),
+      placeholder: Text(widget.placeholder ?? 'forms.selectAccount'.tr()),
+      options: filteredAccounts
+          .map((account) => ShadOption(
+                value: account.id,
+                child: _buildAccountOption(account),
+              ))
+          .toList(),
       selectedOptionBuilder: (context, value) {
-        if (value == null) return Text(widget.placeholder ?? 'accounts.selectAccount'.tr());
+        if (value == null) {
+          return Text(widget.placeholder ?? 'forms.selectAccount'.tr());
+        }
         final account = filteredAccounts.firstWhere((acc) => acc.id == value);
         return _buildSelectedAccountDisplay(account);
       },
