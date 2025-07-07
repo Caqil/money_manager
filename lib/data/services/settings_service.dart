@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -33,20 +34,20 @@ class SettingsService {
   }
 
   // Theme settings
-  AppTheme getThemeMode() {
+  ThemeMode getThemeMode() {
     final themeString = _prefs.getString(AppConstants.keyThemeMode) ?? 'system';
     switch (themeString) {
       case 'light':
-        return AppTheme.light;
+        return ThemeMode.light;
       case 'dark':
-        return AppTheme.dark;
+        return ThemeMode.dark;
       case 'system':
       default:
-        return AppTheme.system;
+        return ThemeMode.system;
     }
   }
 
-  Future<void> setThemeMode(AppTheme theme) async {
+  Future<void> setThemeMode(ThemeMode theme) async {
     await _prefs.setString(AppConstants.keyThemeMode, theme.name);
   }
 
@@ -264,7 +265,7 @@ class SettingsService {
     }
 
     // Set default values
-    await setThemeMode(AppTheme.system);
+    await setThemeMode(ThemeMode.system);
     await setLanguage(AppConstants.defaultLanguage);
     await setBaseCurrency(AppConstants.defaultCurrency);
     await setNotificationsEnabled(true);
@@ -304,16 +305,16 @@ class SettingsService {
     try {
       if (settings.containsKey('theme_mode')) {
         final themeString = settings['theme_mode'] as String;
-        AppTheme theme;
+        ThemeMode theme;
         switch (themeString) {
           case 'light':
-            theme = AppTheme.light;
+            theme = ThemeMode.light;
             break;
           case 'dark':
-            theme = AppTheme.dark;
+            theme = ThemeMode.dark;
             break;
           default:
-            theme = AppTheme.system;
+            theme = ThemeMode.system;
         }
         await setThemeMode(theme);
       }

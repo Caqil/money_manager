@@ -20,7 +20,7 @@ final settingsStateProvider =
 );
 
 // Individual setting providers
-final themeModeProvider = Provider<AppTheme>(
+final themeModeProvider = Provider<ThemeMode>(
   (ref) => ref.watch(settingsStateProvider).themeMode,
 );
 
@@ -70,7 +70,7 @@ final recentCurrenciesProvider = Provider<List<String>>(
 
 // Settings state
 class SettingsState {
-  final AppTheme themeMode;
+  final ThemeMode themeMode;
   final String language;
   final String baseCurrency;
   final bool notificationsEnabled;
@@ -93,7 +93,7 @@ class SettingsState {
   final bool isLoading;
 
   const SettingsState({
-    this.themeMode = AppTheme.system,
+    this.themeMode = ThemeMode.system,
     this.language = 'en',
     this.baseCurrency = 'USD',
     this.notificationsEnabled = true,
@@ -117,7 +117,7 @@ class SettingsState {
   });
 
   SettingsState copyWith({
-    AppTheme? themeMode,
+    ThemeMode? themeMode,
     String? language,
     String? baseCurrency,
     bool? notificationsEnabled,
@@ -233,7 +233,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   // Set theme mode
-  Future<void> setThemeMode(AppTheme theme) async {
+  Future<void> setThemeMode(ThemeMode theme) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _service.setThemeMode(theme);

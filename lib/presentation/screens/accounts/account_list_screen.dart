@@ -8,15 +8,13 @@ import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
 import '../../../data/models/account.dart';
 import '../../providers/account_provider.dart';
-import '../../widgets/forms/custom_dropdown.dart';
-import '../widgets/account_item.dart';
-import '../widgets/account_balance_card.dart';
-import '../common/custom_app_bar.dart';
-import '../common/loading_widget.dart';
-import '../common/error_widget.dart';
-import '../common/empty_state_widget.dart';
-import '../common/confirmation_dialog.dart';
-
+import '../../widgets/common/confirmation_dialog.dart';
+import '../../widgets/common/custom_app_bar.dart';
+import '../../widgets/common/empty_state_widget.dart';
+import '../../widgets/common/error_widget.dart';
+import '../../widgets/common/loading_widget.dart';
+import 'widgets/account_balance_card.dart';
+import 'widgets/account_item.dart'; 
 class AccountListScreen extends ConsumerStatefulWidget {
   const AccountListScreen({super.key});
 

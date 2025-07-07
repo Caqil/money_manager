@@ -10,25 +10,25 @@ final currentThemeModeProvider = Provider<ThemeMode>(
     final appTheme = ref.watch(themeModeProvider);
 
     switch (appTheme) {
-      case AppTheme.light:
+      case ThemeMode.light:
         return ThemeMode.light;
-      case AppTheme.dark:
+      case ThemeMode.dark:
         return ThemeMode.dark;
-      case AppTheme.system:
+      case ThemeMode.system:
         return ThemeMode.system;
     }
   },
 );
 
 // Theme change notifier
-final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, AppTheme>(
+final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>(
   (ref) => ThemeNotifier(ref),
 );
 
-class ThemeNotifier extends StateNotifier<AppTheme> {
+class ThemeNotifier extends StateNotifier<ThemeMode> {
   final Ref _ref;
 
-  ThemeNotifier(this._ref) : super(AppTheme.system) {
+  ThemeNotifier(this._ref) : super(ThemeMode.system) {
     // Load initial theme from settings
     _loadTheme();
   }
@@ -38,21 +38,21 @@ class ThemeNotifier extends StateNotifier<AppTheme> {
     state = theme;
   }
 
-  Future<void> setTheme(AppTheme theme) async {
+  Future<void> setTheme(ThemeMode theme) async {
     state = theme;
     await _ref.read(settingsStateProvider.notifier).setThemeMode(theme);
   }
 
   void toggleTheme() {
     switch (state) {
-      case AppTheme.light:
-        setTheme(AppTheme.dark);
+      case ThemeMode.light:
+        setTheme(ThemeMode.dark);
         break;
-      case AppTheme.dark:
-        setTheme(AppTheme.system);
+      case ThemeMode.dark:
+        setTheme(ThemeMode.system);
         break;
-      case AppTheme.system:
-        setTheme(AppTheme.light);
+      case ThemeMode.system:
+        setTheme(ThemeMode.light);
         break;
     }
   }
