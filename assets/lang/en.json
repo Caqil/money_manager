@@ -39,7 +39,21 @@
     "version": "Version",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "support": "Support"
+    "support": "Support",
+    "amount": "Amount",
+    "currency": "Currency",
+    "category": "Category",
+    "account": "Account",
+    "password": "Password",
+    "custom": "Custom",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This Week",
+    "lastWeek": "Last Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "selectAll": "Select All",
+    "clearAll": "Clear All"
   },
   "navigation": {
     "home": "Home",
@@ -458,7 +472,9 @@
     "minLength": "Minimum {count} characters required",
     "invalidDate": "Invalid date",
     "futureDate": "Date must be in the future",
-    "pastDate": "Date must be in the past"
+    "pastDate": "Date must be in the past",
+    "minSelection": "Select at least {count} items",
+    "maxSelection": "Select maximum {count} items"
   },
   "messages": {
     "success": "Success!",
@@ -534,5 +550,16 @@
     "goalProgress": "Goal Progress",
     "noRecentActivity": "No recent activity",
     "addFirstTransaction": "Add your first transaction to get started"
+  },
+  "forms": {
+    "enterAmount": "Enter amount",
+    "enterPassword": "Enter password",
+    "selectCurrency": "Select currency",
+    "selectCategory": "Select category",
+    "selectAccount": "Select account",
+    "selectDate": "Select date",
+    "selectTime": "Select time", 
+    "selectDateTime": "Select date and time",
+    "selectDateRange": "Select date range"
   }
 }
