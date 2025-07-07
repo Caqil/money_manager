@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/dimensions.dart';
 import '../../core/enums/transaction_type.dart';
 import '../../core/errors/exceptions.dart';
+import '../models/transaction.dart';
 
 class VoiceService {
   static VoiceService? _instance;
