@@ -4,7 +4,6 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 
 import '../../core/constants/app_constants.dart';
-import '../../core/errors/exceptions.dart';
 import '../../core/utils/currency_formatter.dart';
 
 class NotificationService {

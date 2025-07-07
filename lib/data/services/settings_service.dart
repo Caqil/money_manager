@@ -1,3 +1,4 @@
+// lib/data/services/settings_service.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -93,25 +94,23 @@ class SettingsService {
 
   // Budget alert threshold
   double getBudgetAlertThreshold() {
-    return _prefs.getDouble('budget_alert_threshold') ??
-        AppConstants.defaultBudgetAlertThreshold;
+    return _prefs.getDouble('budget_alert_threshold') ?? 0.8;
   }
 
   Future<void> setBudgetAlertThreshold(double threshold) async {
     await _prefs.setDouble('budget_alert_threshold', threshold);
   }
 
-  // Transaction reminder days
+  // ADDED: Transaction reminder days
   int getTransactionReminderDays() {
-    return _prefs.getInt('transaction_reminder_days') ??
-        AppConstants.defaultNotificationDaysBefore;
+    return _prefs.getInt('transaction_reminder_days') ?? 7;
   }
 
   Future<void> setTransactionReminderDays(int days) async {
     await _prefs.setInt('transaction_reminder_days', days);
   }
 
-  // Export format
+  // ADDED: Preferred export format
   String getPreferredExportFormat() {
     return _prefs.getString('preferred_export_format') ?? 'csv';
   }
@@ -120,7 +119,7 @@ class SettingsService {
     await _prefs.setString('preferred_export_format', format);
   }
 
-  // Chart animations
+  // ADDED: Chart animations
   bool areChartAnimationsEnabled() {
     return _prefs.getBool('chart_animations_enabled') ?? true;
   }
@@ -129,54 +128,45 @@ class SettingsService {
     await _prefs.setBool('chart_animations_enabled', enabled);
   }
 
-  // Voice input settings
+  // ADDED: Voice input
   bool isVoiceInputEnabled() {
-    return _prefs.getBool('voice_input_enabled') ?? true;
+    return _prefs.getBool('voice_input_enabled') ?? false;
   }
 
   Future<void> setVoiceInputEnabled(bool enabled) async {
     await _prefs.setBool('voice_input_enabled', enabled);
   }
 
+  // ADDED: Voice input language
   String getVoiceInputLanguage() {
-    return _prefs.getString('voice_input_language') ?? 'en_US';
+    return _prefs.getString('voice_input_language') ?? 'en';
   }
 
   Future<void> setVoiceInputLanguage(String language) async {
     await _prefs.setString('voice_input_language', language);
   }
 
-  // Recent currencies
+  // ADDED: Recent currencies
   List<String> getRecentCurrencies() {
-    return _prefs.getStringList('recent_currencies') ??
-        [AppConstants.defaultCurrency];
+    return _prefs.getStringList('recent_currencies') ?? [];
   }
 
-  Future<void> addRecentCurrency(String currencyCode) async {
+  Future<void> addRecentCurrency(String currency) async {
     final recent = getRecentCurrencies();
-
-    // Remove if already exists
-    recent.remove(currencyCode);
-
-    // Add to front
-    recent.insert(0, currencyCode);
-
-    // Keep only last 5
-    if (recent.length > 5) {
-      recent.removeRange(5, recent.length);
-    }
-
+    recent.remove(currency); // Remove if already exists
+    recent.insert(0, currency); // Add to front
+    if (recent.length > 5) recent.removeLast(); // Keep only 5 recent
     await _prefs.setStringList('recent_currencies', recent);
   }
 
-  // Dashboard widgets
+  // ADDED: Dashboard widgets
   List<String> getDashboardWidgets() {
     return _prefs.getStringList('dashboard_widgets') ??
         [
-          'balance_card',
+          'balance_summary',
           'recent_transactions',
           'budget_overview',
-          'spending_chart',
+          'expense_chart',
         ];
   }
 
@@ -184,13 +174,13 @@ class SettingsService {
     await _prefs.setStringList('dashboard_widgets', widgets);
   }
 
-  // Quick actions
+  // ADDED: Quick actions
   List<String> getQuickActions() {
     return _prefs.getStringList('quick_actions') ??
         [
           'add_expense',
           'add_income',
-          'transfer',
+          'transfer_funds',
         ];
   }
 
@@ -198,7 +188,7 @@ class SettingsService {
     await _prefs.setStringList('quick_actions', actions);
   }
 
-  // Pagination settings
+  // ADDED: Transactions per page
   int getTransactionsPerPage() {
     return _prefs.getInt('transactions_per_page') ?? 20;
   }
@@ -207,7 +197,7 @@ class SettingsService {
     await _prefs.setInt('transactions_per_page', count);
   }
 
-  // Default view settings
+  // ADDED: Default transaction view
   String getDefaultTransactionView() {
     return _prefs.getString('default_transaction_view') ?? 'list';
   }
@@ -216,7 +206,7 @@ class SettingsService {
     await _prefs.setString('default_transaction_view', view);
   }
 
-  // Analytics tracking
+  // ADDED: Analytics tracking
   bool isAnalyticsTrackingEnabled() {
     return _prefs.getBool('analytics_tracking_enabled') ?? false;
   }
@@ -225,13 +215,19 @@ class SettingsService {
     await _prefs.setBool('analytics_tracking_enabled', enabled);
   }
 
-  // First launch
+  // First launch - FIXED: Add the missing setIsFirstLaunch method
   bool isFirstLaunch() {
     return _prefs.getBool(AppConstants.keyIsFirstLaunch) ?? true;
   }
 
+  // ADDED: This is the method that was missing!
+  Future<void> setIsFirstLaunch(bool isFirstLaunch) async {
+    await _prefs.setBool(AppConstants.keyIsFirstLaunch, isFirstLaunch);
+  }
+
+  // Keep the existing method for backward compatibility
   Future<void> setFirstLaunchCompleted() async {
-    await _prefs.setBool(AppConstants.keyIsFirstLaunch, false);
+    await setIsFirstLaunch(false);
   }
 
   // Last backup date
@@ -270,13 +266,20 @@ class SettingsService {
     await setBaseCurrency(AppConstants.defaultCurrency);
     await setNotificationsEnabled(true);
     await setAutoBackupEnabled(false);
-    await setBudgetAlertThreshold(AppConstants.defaultBudgetAlertThreshold);
+    await setBudgetAlertThreshold(0.8);
+    await setTransactionReminderDays(7);
+    await setPreferredExportFormat('csv');
     await setChartAnimationsEnabled(true);
-    await setVoiceInputEnabled(true);
+    await setVoiceInputEnabled(false);
+    await setVoiceInputLanguage('en');
+    await setTransactionsPerPage(20);
+    await setDefaultTransactionView('list');
+    await setAnalyticsTrackingEnabled(false);
+    await setIsFirstLaunch(false); // Don't reset first launch on settings reset
   }
 
   // Export settings
-  Map<String, dynamic> exportSettings() {
+  Future<Map<String, dynamic>> exportSettings() async {
     final settings = <String, dynamic>{};
 
     settings['theme_mode'] = getThemeMode().name;
@@ -296,6 +299,12 @@ class SettingsService {
     settings['transactions_per_page'] = getTransactionsPerPage();
     settings['default_transaction_view'] = getDefaultTransactionView();
     settings['analytics_tracking_enabled'] = isAnalyticsTrackingEnabled();
+    settings['is_first_launch'] = isFirstLaunch();
+
+    final lastBackup = getLastBackupDate();
+    if (lastBackup != null) {
+      settings['last_backup_date'] = lastBackup.toIso8601String();
+    }
 
     return settings;
   }
@@ -304,19 +313,17 @@ class SettingsService {
   Future<void> importSettings(Map<String, dynamic> settings) async {
     try {
       if (settings.containsKey('theme_mode')) {
-        final themeString = settings['theme_mode'] as String;
-        ThemeMode theme;
-        switch (themeString) {
+        final themeName = settings['theme_mode'] as String;
+        switch (themeName) {
           case 'light':
-            theme = ThemeMode.light;
+            await setThemeMode(ThemeMode.light);
             break;
           case 'dark':
-            theme = ThemeMode.dark;
+            await setThemeMode(ThemeMode.dark);
             break;
           default:
-            theme = ThemeMode.system;
+            await setThemeMode(ThemeMode.system);
         }
-        await setThemeMode(theme);
       }
 
       if (settings.containsKey('language')) {
@@ -364,14 +371,20 @@ class SettingsService {
         await setVoiceInputLanguage(settings['voice_input_language'] as String);
       }
 
+      if (settings.containsKey('recent_currencies')) {
+        final currencies =
+            (settings['recent_currencies'] as List).cast<String>();
+        await _prefs.setStringList('recent_currencies', currencies);
+      }
+
       if (settings.containsKey('dashboard_widgets')) {
-        await setDashboardWidgets(
-            (settings['dashboard_widgets'] as List).cast<String>());
+        final widgets = (settings['dashboard_widgets'] as List).cast<String>();
+        await setDashboardWidgets(widgets);
       }
 
       if (settings.containsKey('quick_actions')) {
-        await setQuickActions(
-            (settings['quick_actions'] as List).cast<String>());
+        final actions = (settings['quick_actions'] as List).cast<String>();
+        await setQuickActions(actions);
       }
 
       if (settings.containsKey('transactions_per_page')) {
@@ -388,20 +401,17 @@ class SettingsService {
             settings['analytics_tracking_enabled'] as bool);
       }
 
-      if (settings.containsKey('recent_currencies')) {
-        await _prefs.setStringList('recent_currencies',
-            (settings['recent_currencies'] as List).cast<String>());
+      if (settings.containsKey('is_first_launch')) {
+        await setIsFirstLaunch(settings['is_first_launch'] as bool);
+      }
+
+      if (settings.containsKey('last_backup_date')) {
+        final dateString = settings['last_backup_date'] as String;
+        final date = DateTime.parse(dateString);
+        await setLastBackupDate(date);
       }
     } catch (e) {
       throw Exception('Failed to import settings: $e');
     }
-  }
-
-  // Check if initialized
-  bool get isInitialized => _isInitialized;
-
-  // Dispose service
-  void dispose() {
-    // Clean up resources if needed
   }
 }

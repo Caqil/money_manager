@@ -1,8 +1,10 @@
+// lib/presentation/routes/app_router.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:money_manager/presentation/pages/main/main_layout.dart';
 
 import '../screens/splash/splash_screen.dart';
+import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/transactions/transaction_list_screen.dart';
@@ -12,41 +14,57 @@ import '../screens/analytics/analytics_screen.dart';
 import '../screens/accounts/account_list_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../providers/auth_provider.dart';
+import '../providers/settings_provider.dart';
 import 'route_names.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
+  final settingsState = ref.watch(settingsStateProvider);
 
   return GoRouter(
     initialLocation: RouteNames.splash,
     // redirect: (context, state) {
-    //   final isAuthenticated = authState.isAuthenticated;
-    //   final isOnAuthPages = state.matchedLocation.startsWith('/auth') ||
-    //       state.matchedLocation == RouteNames.splash;
+    //   final currentLocation = state.matchedLocation;
+    //   final settingsState = ref.read(settingsStateProvider);
 
-    //   if (!isAuthenticated && !isOnAuthPages) {
-    //     return RouteNames.login;
+    //   // IMPORTANT: Let splash handle its own navigation
+    //   if (currentLocation == RouteNames.splash) {
+    //     return null;
     //   }
 
-    //   if (isAuthenticated &&
-    //       isOnAuthPages &&
-    //       state.matchedLocation != RouteNames.splash) {
-    //     return RouteNames.home;
+    //   // IMPORTANT: Don't redirect if already on onboarding
+    //   if (currentLocation == RouteNames.onboarding) {
+    //     return null;
+    //   }
+
+    //   // Only redirect TO onboarding if first launch
+    //   if (settingsState.isFirstLaunch &&
+    //       currentLocation != RouteNames.onboarding &&
+    //       currentLocation != RouteNames.splash) {
+    //     return RouteNames.onboarding;
     //   }
 
     //   return null;
     // },
     routes: [
+      // Public routes (no authentication required)
       GoRoute(
         path: RouteNames.splash,
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
       ),
       GoRoute(
+        path: RouteNames.onboarding,
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
         path: RouteNames.login,
         name: 'login',
         builder: (context, state) => const LoginScreen(),
       ),
+
+      // Protected routes (require authentication if enabled)
       ShellRoute(
         builder: (context, state, child) {
           return MainLayout(child: child);
@@ -87,11 +105,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'analytics',
             builder: (context, state) => const AnalyticsScreen(),
           ),
-          // GoRoute(
-          //   path: RouteNames.goals,
-          //   name: 'goals',
-          //   builder: (context, state) => const GoalListScreen(),
-          // ),
           GoRoute(
             path: RouteNames.accounts,
             name: 'accounts',

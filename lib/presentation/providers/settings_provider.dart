@@ -1,7 +1,4 @@
-// ==========================================
 // lib/presentation/providers/settings_provider.dart
-// ==========================================
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
@@ -170,7 +167,7 @@ class SettingsState {
   }
 }
 
-// Settings notifier
+// COMPLETE Settings notifier with all missing methods
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsService _service;
 
@@ -233,11 +230,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   // Set theme mode
-  Future<void> setThemeMode(ThemeMode theme) async {
+  Future<void> setThemeMode(ThemeMode themeMode) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      await _service.setThemeMode(theme);
-      state = state.copyWith(themeMode: theme, isLoading: false);
+      await _service.setThemeMode(themeMode);
+      state = state.copyWith(themeMode: themeMode, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -247,11 +244,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   // Set language
-  Future<void> setLanguage(String languageCode) async {
+  Future<void> setLanguage(String language) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      await _service.setLanguage(languageCode);
-      state = state.copyWith(language: languageCode, isLoading: false);
+      await _service.setLanguage(language);
+      state = state.copyWith(language: language, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -261,15 +258,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   // Set base currency
-  Future<void> setBaseCurrency(String currencyCode) async {
+  Future<void> setBaseCurrency(String currency) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      await _service.setBaseCurrency(currencyCode);
-      state = state.copyWith(
-        baseCurrency: currencyCode,
-        recentCurrencies: _service.getRecentCurrencies(),
-        isLoading: false,
-      );
+      await _service.setBaseCurrency(currency);
+      state = state.copyWith(baseCurrency: currency, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -301,7 +294,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update auto backup: $e',
+        error: 'Failed to update backup settings: $e',
       );
     }
   }
@@ -329,7 +322,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update transaction reminder days: $e',
+        error: 'Failed to update reminder settings: $e',
       );
     }
   }
@@ -357,7 +350,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update chart animations: $e',
+        error: 'Failed to update animation settings: $e',
       );
     }
   }
@@ -371,7 +364,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update voice input: $e',
+        error: 'Failed to update voice input settings: $e',
       );
     }
   }
@@ -385,52 +378,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update voice input language: $e',
-      );
-    }
-  }
-
-  // Add recent currency
-  Future<void> addRecentCurrency(String currencyCode) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.addRecentCurrency(currencyCode);
-      state = state.copyWith(
-        recentCurrencies: _service.getRecentCurrencies(),
-        isLoading: false,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to add recent currency: $e',
-      );
-    }
-  }
-
-  // Set dashboard widgets
-  Future<void> setDashboardWidgets(List<String> widgets) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setDashboardWidgets(widgets);
-      state = state.copyWith(dashboardWidgets: widgets, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to update dashboard widgets: $e',
-      );
-    }
-  }
-
-  // Set quick actions
-  Future<void> setQuickActions(List<String> actions) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setQuickActions(actions);
-      state = state.copyWith(quickActions: actions, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to update quick actions: $e',
+        error: 'Failed to update voice language: $e',
       );
     }
   }
@@ -444,7 +392,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update transactions per page: $e',
+        error: 'Failed to update pagination settings: $e',
       );
     }
   }
@@ -458,7 +406,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update default transaction view: $e',
+        error: 'Failed to update view settings: $e',
       );
     }
   }
@@ -473,17 +421,17 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update analytics tracking: $e',
+        error: 'Failed to update analytics settings: $e',
       );
     }
   }
 
-  // Mark first launch as completed
-  Future<void> setFirstLaunchCompleted() async {
+  // ADDED: Set first launch status (this was missing!)
+  Future<void> setIsFirstLaunch(bool isFirstLaunch) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      await _service.setFirstLaunchCompleted();
-      state = state.copyWith(isFirstLaunch: false, isLoading: false);
+      await _service.setIsFirstLaunch(isFirstLaunch);
+      state = state.copyWith(isFirstLaunch: isFirstLaunch, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -502,6 +450,45 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to update last backup date: $e',
+      );
+    }
+  }
+
+  // Add recent currency
+  Future<void> addRecentCurrency(String currency) async {
+    try {
+      await _service.addRecentCurrency(currency);
+      final updatedCurrencies = _service.getRecentCurrencies();
+      state = state.copyWith(recentCurrencies: updatedCurrencies);
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to add recent currency: $e');
+    }
+  }
+
+  // Update dashboard widgets
+  Future<void> updateDashboardWidgets(List<String> widgets) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setDashboardWidgets(widgets);
+      state = state.copyWith(dashboardWidgets: widgets, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update dashboard widgets: $e',
+      );
+    }
+  }
+
+  // Update quick actions
+  Future<void> updateQuickActions(List<String> actions) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setQuickActions(actions);
+      state = state.copyWith(quickActions: actions, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update quick actions: $e',
       );
     }
   }
@@ -554,81 +541,3 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     await loadSettings();
   }
 }
-
-// ==========================================
-// lib/data/services/settings_service.dart (Missing Methods)
-// ==========================================
-
-// Add these methods to your existing SettingsService class if they're missing:
-
-/*
-class SettingsService {
-  // ... existing code ...
-
-  // Transaction reminder days
-  int getTransactionReminderDays() {
-    return _prefs.getInt('transaction_reminder_days') ?? 7;
-  }
-
-  Future<void> setTransactionReminderDays(int days) async {
-    await _prefs.setInt('transaction_reminder_days', days);
-  }
-
-  // Preferred export format
-  String getPreferredExportFormat() {
-    return _prefs.getString('preferred_export_format') ?? 'csv';
-  }
-
-  Future<void> setPreferredExportFormat(String format) async {
-    await _prefs.setString('preferred_export_format', format);
-  }
-
-  // Chart animations
-  bool areChartAnimationsEnabled() {
-    return _prefs.getBool('chart_animations_enabled') ?? true;
-  }
-
-  Future<void> setChartAnimationsEnabled(bool enabled) async {
-    await _prefs.setBool('chart_animations_enabled', enabled);
-  }
-
-  // Voice input
-  bool isVoiceInputEnabled() {
-    return _prefs.getBool('voice_input_enabled') ?? false;
-  }
-
-  Future<void> setVoiceInputEnabled(bool enabled) async {
-    await _prefs.setBool('voice_input_enabled', enabled);
-  }
-
-  String getVoiceInputLanguage() {
-    return _prefs.getString('voice_input_language') ?? 'en';
-  }
-
-  Future<void> setVoiceInputLanguage(String language) async {
-    await _prefs.setString('voice_input_language', language);
-  }
-
-  // Recent currencies
-  List<String> getRecentCurrencies() {
-    return _prefs.getStringList('recent_currencies') ?? [];
-  }
-
-  Future<void> addRecentCurrency(String currencyCode) async {
-    final recent = getRecentCurrencies();
-    recent.remove(currencyCode); // Remove if exists
-    recent.insert(0, currencyCode); // Add to front
-    if (recent.length > 5) {
-      recent.removeLast(); // Keep only 5 recent
-    }
-    await _prefs.setStringList('recent_currencies', recent);
-  }
-
-  // Reset all settings
-  Future<void> resetSettings() async {
-    await _prefs.clear();
-  }
-
-  // Export/Import settings methods are already provided in your existing code
-}
-*/

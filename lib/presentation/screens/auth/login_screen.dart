@@ -1,3 +1,4 @@
+// lib/presentation/screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -8,6 +9,7 @@ import '../../../core/constants/colors.dart';
 import '../../../core/constants/text_styles.dart';
 import '../../../core/errors/exceptions.dart';
 import '../../providers/auth_provider.dart';
+import '../../routes/route_names.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/custom_dialog.dart';
@@ -43,18 +45,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   bool _isLoading = false;
   bool _showBiometric = true;
   Duration? _lockoutTime;
+  int _failedAttempts = 0;
 
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
-    _checkLockoutStatus();
-    _tryBiometricLogin();
+
+    // Use addPostFrameCallback to ensure the widget is built before checking lockout
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLockoutStatusSafely();
+    });
   }
 
   void _initializeAnimations() {
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -64,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
 
     _lockoutController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
 
@@ -77,11 +83,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     ));
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
+      begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _slideController,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOutBack,
     ));
 
     _lockoutAnimation = Tween<double>(
@@ -92,7 +98,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       curve: Curves.easeInOut,
     ));
 
-    // Start animations
     _fadeController.forward();
     _slideController.forward();
   }
@@ -105,51 +110,64 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.dispose();
   }
 
-  void _checkLockoutStatus() {
-    final authService = ref.read(authServiceProvider);
-    final lockoutTime = authService.getRemainingLockoutTime();
+  // FIXED: Safe method to check lockout status
+  Future<void> _checkLockoutStatusSafely() async {
+    try {
+      // Use the AuthService through the provider safely
+      final authService = ref.read(authServiceProvider);
 
-    if (lockoutTime != null) {
-      setState(() {
-        _lockoutTime = lockoutTime;
-        _showBiometric = false;
-      });
-      _startLockoutTimer();
-      _lockoutController.forward();
+      // Check if service is initialized using the public getter
+      if (!authService.isInitialized) {
+        // Service not initialized - this shouldn't happen if main.dart is fixed
+        print('Warning: AuthService not initialized in login screen');
+        return;
+      }
+
+      final lockoutTime = await authService.getRemainingLockoutTime();
+
+      if (mounted) {
+        setState(() {
+          _lockoutTime = lockoutTime;
+        });
+
+        if (lockoutTime != null) {
+          _startLockoutTimer();
+        }
+      }
+    } catch (e) {
+      // If there's still an error, log it but don't crash the app
+      print('Error checking lockout status: $e');
+
+      // Optionally show an error message to the user
+      if (mounted) {
+        setState(() {
+          _errorMessage =
+              'Unable to check authentication status. Please try again.';
+        });
+      }
     }
   }
 
   void _startLockoutTimer() {
-    if (_lockoutTime == null) return;
-
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted && _lockoutTime != null) {
-        final remaining = _lockoutTime! - const Duration(seconds: 1);
-        if (remaining.inSeconds <= 0) {
-          setState(() {
-            _lockoutTime = null;
-            _showBiometric = true;
-          });
-          _lockoutController.reverse();
-        } else {
-          setState(() {
-            _lockoutTime = remaining;
-          });
-          _startLockoutTimer();
+    if (_lockoutTime != null) {
+      _lockoutController.forward();
+      // Update lockout time every second
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted && _lockoutTime != null) {
+          final remaining = _lockoutTime! - const Duration(seconds: 1);
+          if (remaining.inSeconds <= 0) {
+            setState(() {
+              _lockoutTime = null;
+            });
+            _lockoutController.reverse();
+          } else {
+            setState(() {
+              _lockoutTime = remaining;
+            });
+            _startLockoutTimer();
+          }
         }
-      }
-    });
-  }
-
-  Future<void> _tryBiometricLogin() async {
-    final authState = ref.read(authStateProvider);
-    if (!authState.isBiometricEnabled) return;
-
-    // Small delay to let the screen settle
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    if (mounted && _showBiometric) {
-      _authenticateWithBiometric();
+      });
     }
   }
 
@@ -161,11 +179,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   void _onPinCompleted(String pin) {
-    _authenticateWithPin(pin);
+    _verifyPin();
   }
 
-  Future<void> _authenticateWithPin(String pin) async {
-    if (_lockoutTime != null) return;
+  // FIXED: Updated to use AuthNotifier's authenticateWithPin method
+  Future<void> _verifyPin() async {
+    if (_currentPin.length != 4) return;
 
     setState(() {
       _isLoading = true;
@@ -173,107 +192,87 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     try {
+      // Use the AuthNotifier's authenticateWithPin method (not verifyPin)
       final authNotifier = ref.read(authStateProvider.notifier);
-      final success = await authNotifier.verifyPin(pin);
+      final isValid = await authNotifier.authenticateWithPin(_currentPin);
 
-      if (success) {
-        _onAuthenticationSuccess();
-      } else {
-        _onAuthenticationFailed('auth.invalidPin'.tr());
+      if (mounted) {
+        if (isValid) {
+          context.go(widget.redirectPath ?? RouteNames.home);
+        } else {
+          setState(() {
+            _errorMessage = 'auth.invalidPin'.tr();
+            _failedAttempts++;
+            _currentPin = '';
+          });
+
+          _pinInputKey.currentState?.deactivate();
+
+          // Check for lockout after failed attempt
+          await _checkLockoutStatusSafely();
+        }
       }
     } catch (e) {
-      _onAuthenticationFailed(_getErrorMessage(e));
+      if (mounted) {
+        setState(() {
+          if (e.toString().contains('locked')) {
+            _errorMessage = e.toString();
+            _lockoutTime = const Duration(minutes: 30);
+            _startLockoutTimer();
+          } else {
+            _errorMessage = 'auth.error'.tr();
+          }
+          _currentPin = '';
+        });
+        _pinInputKey.currentState?.deactivate();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  Future<void> _authenticateWithBiometric() async {
-    if (_lockoutTime != null) return;
-
+  // FIXED: Helper method to safely access biometric authentication
+  Future<void> _authenticateWithBiometrics() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
+      // Use the AuthNotifier's authenticateWithBiometrics method
       final authNotifier = ref.read(authStateProvider.notifier);
-      final success = await authNotifier.authenticateWithBiometrics();
+      final isAuthenticated = await authNotifier.authenticateWithBiometrics();
 
-      if (success) {
-        _onAuthenticationSuccess();
-      } else {
-        _onAuthenticationFailed('auth.authenticationFailed'.tr());
-        setState(() {
-          _showBiometric = false;
-        });
+      if (mounted) {
+        if (isAuthenticated) {
+          context.go(widget.redirectPath ?? RouteNames.home);
+        } else {
+          setState(() {
+            _errorMessage = 'auth.biometricFailed'.tr();
+          });
+        }
       }
     } catch (e) {
-      _onAuthenticationFailed(_getErrorMessage(e));
-      setState(() {
-        _showBiometric = false;
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'auth.biometricError'.tr();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _onAuthenticationSuccess() {
-    // Navigate to intended destination
-    final redirectPath = widget.redirectPath ?? '/dashboard';
-    context.go(redirectPath);
-  }
-
-  void _onAuthenticationFailed(String message) {
-    setState(() {
-      _isLoading = false;
-      _errorMessage = message;
-    });
-
-    _pinInputKey.currentState?.showError();
-    _pinInputKey.currentState?.clearPin();
-
-    // Check if account is now locked
-    _checkLockoutStatus();
-  }
-
-  String _getErrorMessage(dynamic error) {
-    if (error is AuthenticationException) {
-      if (error.message.contains('locked')) {
-        return error.message;
-      }
-      return 'auth.invalidPin'.tr();
-    } else if (error is BiometricNotAvailableException) {
-      return 'auth.biometricNotAvailable'.tr();
-    }
-    return 'errors.general'.tr();
-  }
-
-  void _showForgotPinDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => CustomDialog(
-        icon: Icon(
-          Icons.help_outline_rounded,
-          color: AppColors.warning,
-          size: AppDimensions.iconXl,
-        ),
-        title: 'auth.forgotPin'.tr(),
-        content: 'auth.forgotPinMessage'.tr(),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('common.cancel'.tr()),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _resetAuthentication();
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
-            child: Text('auth.resetApp'.tr()),
-          ),
-        ],
-      ),
-    );
+    context.go(widget.redirectPath ?? RouteNames.home);
   }
 
   Future<void> _resetAuthentication() async {
@@ -282,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       await authNotifier.resetAuthentication();
 
       // Navigate to onboarding
-      context.go('/onboarding');
+      context.go(RouteNames.onboarding);
     } catch (e) {
       // Show error
       setState(() {
@@ -419,6 +418,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
+  Widget _buildFailedAttemptsInfo() {
+    if (_failedAttempts == 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
+      child: Text(
+        'auth.failedAttempts'.tr(args: [_failedAttempts.toString()]),
+        style: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.error.withOpacity(0.7),
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
   Widget _buildBiometricButton() {
     final authState = ref.watch(authStateProvider);
 
@@ -449,56 +463,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (_lockoutTime != null) return const SizedBox.shrink();
 
     return TextButton(
-      onPressed: _isLoading ? null : _showForgotPinDialog,
+      onPressed: _isLoading ? null : _resetAuthentication,
       child: Text(
         'auth.forgotPin'.tr(),
         style: AppTextStyles.bodyMedium.copyWith(
           color: AppColors.primary,
-          fontWeight: FontWeight.w500,
+          decoration: TextDecoration.underline,
         ),
-      ),
-    );
-  }
-
-  Widget _buildFailedAttemptsInfo() {
-    final authService = ref.read(authServiceProvider);
-    final failedAttempts = authService.getFailedAttempts();
-
-    if (failedAttempts == 0 || _lockoutTime != null) {
-      return const SizedBox.shrink();
-    }
-
-    final maxAttempts =
-        5; // This should come from AppConstants.maxLoginAttempts
-    final remainingAttempts = maxAttempts - failedAttempts;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      padding: const EdgeInsets.all(AppDimensions.paddingS),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-        border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.warning_amber_rounded,
-            color: AppColors.warning,
-            size: AppDimensions.iconS,
-          ),
-          const SizedBox(width: AppDimensions.spacingS),
-          Text(
-            'auth.attemptsRemaining'.tr(args: [remainingAttempts.toString()]),
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.warning,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -506,24 +477,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: '',
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
       body: Stack(
         children: [
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: SafeArea(
+          SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
               child: Column(
                 children: [
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(AppDimensions.paddingL),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: AppDimensions.spacingXl),
+                          const SizedBox(height: AppDimensions.spacingXxl),
                           _buildHeader(),
                           const SizedBox(height: AppDimensions.spacingXxl),
                           _buildLockoutMessage(),

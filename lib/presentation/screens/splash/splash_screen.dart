@@ -1,10 +1,13 @@
+// lib/presentation/screens/splash/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/dimensions.dart';
 import '../../../core/constants/colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/logger.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -27,6 +30,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   double _progress = 0.0;
   bool _hasError = false;
   String? _errorMessage;
+  bool _hasNavigated = false; // Prevent multiple navigations
 
   @override
   void initState() {
@@ -62,11 +66,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     AppLogger.info('🚀 Starting splash initialization...');
 
     try {
-      // Since core services are already initialized in main.dart,
-      // we'll focus on loading app-specific data and providers
-      
       await _loadAppData();
-      
+
       // Complete initialization
       setState(() {
         _progress = 1.0;
@@ -74,8 +75,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       });
 
       await Future.delayed(const Duration(milliseconds: 500));
-      _navigateToNextScreen();
 
+      if (!_hasNavigated) {
+        await _navigateToNextScreen();
+      }
     } catch (e, stackTrace) {
       AppLogger.error('❌ Splash initialization failed', e, stackTrace);
       _handleInitializationError(e, stackTrace);
@@ -88,9 +91,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _currentMessage = 'splash.loading.settings'.tr();
       _progress = 0.0;
     });
-    
+
     await _loadSettings();
-    setState(() { _progress = 0.2; });
+    setState(() {
+      _progress = 0.2;
+    });
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 2: Initialize auth state (40%)
@@ -98,9 +103,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _currentMessage = 'splash.loading.auth'.tr();
       _progress = 0.2;
     });
-    
+
     await _loadAuthState();
-    setState(() { _progress = 0.4; });
+    setState(() {
+      _progress = 0.4;
+    });
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 3: Verify services (60%)
@@ -108,9 +115,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _currentMessage = 'splash.loading.services'.tr();
       _progress = 0.4;
     });
-    
+
     await _verifyServices();
-    setState(() { _progress = 0.6; });
+    setState(() {
+      _progress = 0.6;
+    });
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 4: Prepare app data (80%)
@@ -118,9 +127,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _currentMessage = 'splash.loading.data'.tr();
       _progress = 0.6;
     });
-    
+
     await _prepareAppData();
-    setState(() { _progress = 0.8; });
+    setState(() {
+      _progress = 0.8;
+    });
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 5: Finalize (100%)
@@ -128,9 +139,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _currentMessage = 'splash.loading.finalizing'.tr();
       _progress = 0.8;
     });
-    
+
     await _finalizeLoad();
-    setState(() { _progress = 1.0; });
+    setState(() {
+      _progress = 1.0;
+    });
   }
 
   Future<void> _loadSettings() async {
@@ -150,7 +163,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // Check auth status - the AuthNotifier will automatically
       // load the current auth state when we read it
       final authState = ref.read(authStateProvider);
-      AppLogger.info('✅ Auth state loaded: ${authState.isPinEnabled ? "PIN enabled" : "No PIN"}, ${authState.isBiometricEnabled ? "Biometric enabled" : "No biometric"}');
+      AppLogger.info(
+          '✅ Auth state loaded: ${authState.isPinEnabled ? "PIN enabled" : "No PIN"}, ${authState.isBiometricEnabled ? "Biometric enabled" : "No biometric"}');
     } catch (e) {
       AppLogger.error('❌ Failed to load auth state', e);
       // Continue without auth state
@@ -159,13 +173,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _verifyServices() async {
     try {
-      // Verify that all services are properly initialized
-      // These services should already be initialized from main.dart
       AppLogger.info('🔍 Verifying services...');
-      
-      // Quick verification without re-initializing
       await Future.delayed(const Duration(milliseconds: 200));
-      
       AppLogger.info('✅ Services verified');
     } catch (e) {
       AppLogger.error('❌ Service verification failed', e);
@@ -175,12 +184,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   Future<void> _prepareAppData() async {
     try {
-      // Prepare any initial app data
-      // This could include loading initial categories, currency rates, etc.
       AppLogger.info('📊 Preparing app data...');
-      
       await Future.delayed(const Duration(milliseconds: 300));
-      
       AppLogger.info('✅ App data prepared');
     } catch (e) {
       AppLogger.error('❌ Failed to prepare app data', e);
@@ -189,38 +194,77 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _finalizeLoad() async {
-    // Final cleanup and preparation
     AppLogger.info('🏁 Finalizing splash...');
     await Future.delayed(const Duration(milliseconds: 200));
     AppLogger.info('✅ Splash finalized');
   }
 
-  void _navigateToNextScreen() {
-    final settingsState = ref.read(settingsStateProvider);
-    final authState = ref.read(authStateProvider);
+  // COMPLETELY REWRITTEN: Better navigation logic with comprehensive state checking
+  Future<void> _navigateToNextScreen() async {
+    if (_hasNavigated) {
+      print('⚠️ Navigation already completed, skipping...');
+      return;
+    }
 
-    AppLogger.info('🧭 Navigation decision:');
-    AppLogger.info('  - First launch: ${settingsState.isFirstLaunch}');
-    AppLogger.info('  - Auth enabled: ${authState.isPinEnabled || authState.isBiometricEnabled}');
-    AppLogger.info('  - Authenticated: ${authState.isAuthenticated}');
+    _hasNavigated = true;
 
-    if (settingsState.isFirstLaunch) {
-      // First time user - go to onboarding
-      AppLogger.info('📱 Navigating to onboarding');
-      context.go(RouteNames.onboarding);
-    } else if (authState.isPinEnabled || authState.isBiometricEnabled) {
-      if (!authState.isAuthenticated) {
-        // User needs to authenticate
-        AppLogger.info('🔐 Navigating to login');
+    try {
+      print('🧭 === SPLASH NAVIGATION DECISION ===');
+
+      // Get multiple sources of truth for first launch
+      final settingsState = ref.read(settingsStateProvider);
+      final settingsService = ref.read(settingsServiceProvider);
+      final prefs = await SharedPreferences.getInstance();
+
+      final providerFirstLaunch = settingsState.isFirstLaunch;
+      final serviceFirstLaunch = settingsService.isFirstLaunch();
+      final prefsFirstLaunch =
+          prefs.getBool(AppConstants.keyIsFirstLaunch) ?? true;
+
+      print('📊 First Launch Status Check:');
+      print('  Provider: $providerFirstLaunch');
+      print('  Service: $serviceFirstLaunch');
+      print('  SharedPrefs: $prefsFirstLaunch');
+
+      // Use the most conservative approach - if ANY source says it's first launch, go to onboarding
+      // But if ALL sources say it's NOT first launch, skip onboarding
+      final isFirstLaunch =
+          providerFirstLaunch || serviceFirstLaunch || prefsFirstLaunch;
+
+      print('📊 Final Decision: isFirstLaunch = $isFirstLaunch');
+
+      // Get auth state
+      final authState = ref.read(authStateProvider);
+      final hasAuthEnabled =
+          authState.isPinEnabled || authState.isBiometricEnabled;
+      final isAuthenticated = authState.isAuthenticated;
+
+      print('📊 Auth Status:');
+      print('  PIN enabled: ${authState.isPinEnabled}');
+      print('  Biometric enabled: ${authState.isBiometricEnabled}');
+      print('  Has auth enabled: $hasAuthEnabled');
+      print('  Is authenticated: $isAuthenticated');
+
+      // Navigation logic
+      if (isFirstLaunch) {
+        print('🎯 DECISION: Navigate to onboarding (first launch)');
+        context.go(RouteNames.onboarding);
+      } else if (hasAuthEnabled && !isAuthenticated) {
+        print('🎯 DECISION: Navigate to login (auth required)');
         context.go(RouteNames.login);
       } else {
-        // Already authenticated - go to home
-        AppLogger.info('🏠 Navigating to home');
+        print('🎯 DECISION: Navigate to home');
         context.go(RouteNames.home);
       }
-    } else {
-      // No auth setup - go to home
-      AppLogger.info('🏠 Navigating to home (no auth)');
+
+      print('✅ === NAVIGATION COMPLETED ===');
+    } catch (e, stackTrace) {
+      print('❌ === NAVIGATION ERROR ===');
+      print('Error: $e');
+      print('StackTrace: $stackTrace');
+
+      // Fallback navigation
+      print('🔄 Fallback: Navigating to home');
       context.go(RouteNames.home);
     }
   }
@@ -241,6 +285,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       _errorMessage = null;
       _progress = 0.0;
       _currentMessage = '';
+      _hasNavigated = false;
     });
 
     _startInitialization();
@@ -264,9 +309,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 size: AppDimensions.iconXxl,
                 color: AppColors.error,
               ),
-              
               const SizedBox(height: AppDimensions.spacingL),
-              
               Text(
                 'splash.error.title'.tr(),
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -275,9 +318,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-              
               const SizedBox(height: AppDimensions.spacingM),
-              
               Text(
                 _errorMessage ?? 'splash.error.general'.tr(),
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -287,9 +328,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              
               const SizedBox(height: AppDimensions.spacingXl),
-              
               SizedBox(
                 width: 200,
                 child: ElevatedButton(

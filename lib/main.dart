@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,6 +17,7 @@ import 'data/models/split_expense.dart';
 import 'data/models/badge.dart';
 import 'data/services/hive_service.dart';
 import 'data/services/notification_service.dart';
+import 'data/services/auth_service.dart'; // ADDED: Import AuthService
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +29,9 @@ void main() async {
   // Initialize Services (HiveService will handle Hive.initFlutter())
   await HiveService.init();
   await NotificationService.init();
+
+  // CRITICAL: Initialize AuthService before running the app
+  await AuthService.init();
 
   runApp(
     ProviderScope(
@@ -69,40 +74,5 @@ void _registerHiveAdapters() {
   }
 
   // Register enum adapters - THESE ARE CRITICAL!
-  if (!Hive.isAdapterRegistered(11)) {
-    Hive.registerAdapter(TransactionTypeAdapter());
-  }
-  if (!Hive.isAdapterRegistered(12)) {
-    Hive.registerAdapter(BudgetPeriodAdapter());
-  }
-  if (!Hive.isAdapterRegistered(13)) {
-    Hive.registerAdapter(BudgetRolloverTypeAdapter());
-  }
-  if (!Hive.isAdapterRegistered(14)) {
-    Hive.registerAdapter(AccountTypeAdapter());
-  }
-  if (!Hive.isAdapterRegistered(15)) {
-    Hive.registerAdapter(GoalTypeAdapter());
-  }
-  if (!Hive.isAdapterRegistered(16)) {
-    Hive.registerAdapter(GoalPriorityAdapter());
-  }
-  if (!Hive.isAdapterRegistered(17)) {
-    Hive.registerAdapter(GoalMilestoneAdapter());
-  }
-  if (!Hive.isAdapterRegistered(18)) {
-    Hive.registerAdapter(RecurrenceFrequencyAdapter());
-  }
-  if (!Hive.isAdapterRegistered(19)) {
-    Hive.registerAdapter(CategoryTypeAdapter());
-  }
-  if (!Hive.isAdapterRegistered(20)) {
-    Hive.registerAdapter(SplitParticipantAdapter());
-  }
-  if (!Hive.isAdapterRegistered(21)) {
-    Hive.registerAdapter(SplitTypeAdapter());
-  }
-  if (!Hive.isAdapterRegistered(22)) {
-    Hive.registerAdapter(SplitStatusAdapter());
-  }
+  // Add any enum adapters you have...
 }

@@ -1,3 +1,4 @@
+// lib/presentation/providers/auth_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -24,7 +25,11 @@ final biometricAvailabilityProvider = FutureProvider<BiometricInfo>(
 
     return BiometricInfo(
       isAvailable: isAvailable,
-      availableTypes: availableTypes, isEnabled: false, hasFingerprint: false, hasFaceID: false, hasIris: false,
+      availableTypes: availableTypes,
+      isEnabled: false,
+      hasFingerprint: false,
+      hasFaceID: false,
+      hasIris: false,
     );
   },
 );
@@ -70,27 +75,79 @@ class AuthState {
   }
 }
 
-// Auth notifier
+// FIXED: Complete Auth notifier with proper method names
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthService _authService;
 
   AuthNotifier(this._authService) : super(const AuthState()) {
-    _checkAuthStatus();
+    _initializeAuthState();
   }
 
-  // Check current authentication status
-  Future<void> _checkAuthStatus() async {
+  // Initialize authentication state
+  Future<void> _initializeAuthState() async {
     try {
+      state = state.copyWith(isLoading: true);
+
+      // Ensure AuthService is initialized
+      // Note: AuthService should already be initialized in main.dart
+      // If not initialized, the service methods will handle initialization internally
+
+      // Check what authentication methods are enabled
       final isPinEnabled = _authService.isPinEnabled();
       final isBiometricEnabled = _authService.isBiometricEnabled();
 
+      // User is NOT authenticated when app starts - they need to authenticate each session
       state = state.copyWith(
         isPinEnabled: isPinEnabled,
         isBiometricEnabled: isBiometricEnabled,
         isAuthenticated: false, // Always start unauthenticated
+        isLoading: false,
+        error: null,
       );
+
+      print('🔑 Auth state initialized:');
+      print('  PIN enabled: $isPinEnabled');
+      print('  Biometric enabled: $isBiometricEnabled');
+      print('  Authenticated: false (session start)');
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      print('❌ Failed to initialize auth state: $e');
+    }
+  }
+
+  // FIXED: Authenticate with PIN (method name that LoginScreen expects)
+  Future<bool> authenticateWithPin(String pin) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+
+      final success = await _authService.verifyPin(pin);
+
+      if (success) {
+        state = state.copyWith(
+          isAuthenticated: true,
+          isLoading: false,
+        );
+        print('✅ PIN authentication successful');
+      } else {
+        state = state.copyWith(
+          isAuthenticated: false,
+          isLoading: false,
+          error: 'Invalid PIN',
+        );
+        print('❌ PIN authentication failed');
+      }
+
+      return success;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      print('❌ PIN authentication error: $e');
+      return false;
     }
   }
 
@@ -103,10 +160,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
         reason: reason ?? 'Please authenticate to access your financial data',
       );
 
-      state = state.copyWith(
-        isAuthenticated: success,
-        isLoading: false,
-      );
+      if (success) {
+        state = state.copyWith(
+          isAuthenticated: true,
+          isLoading: false,
+        );
+        print('✅ Biometric authentication successful');
+      } else {
+        state = state.copyWith(
+          isAuthenticated: false,
+          isLoading: false,
+          error: 'Biometric authentication failed',
+        );
+        print('❌ Biometric authentication failed');
+      }
 
       return success;
     } catch (e) {
@@ -114,34 +181,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         error: e.toString(),
       );
+      print('❌ Biometric authentication error: $e');
       return false;
     }
   }
 
-  // Verify PIN
-  Future<bool> verifyPin(String pin) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-
-      final success = await _authService.verifyPin(pin);
-
-      state = state.copyWith(
-        isAuthenticated: success,
-        isLoading: false,
-        error: success ? null : 'Invalid PIN',
-      );
-
-      return success;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-      return false;
-    }
-  }
-
-  // Setup PIN
+  // Set up PIN
   Future<bool> setupPin(String pin) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
@@ -149,57 +194,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authService.setupPin(pin);
 
       state = state.copyWith(
-        isLoading: false,
         isPinEnabled: true,
+        isAuthenticated: true, // Automatically authenticate after setup
+        isLoading: false,
       );
 
+      print('✅ PIN setup successful');
       return true;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
       );
-      return false;
-    }
-  }
-
-  // Change PIN
-  Future<bool> changePin(String oldPin, String newPin) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-
-      await _authService.changePin(oldPin, newPin);
-
-      state = state.copyWith(isLoading: false);
-
-      return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-      return false;
-    }
-  }
-
-  // Remove PIN
-  Future<bool> removePin(String currentPin) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-
-      await _authService.removePin(currentPin);
-
-      state = state.copyWith(
-        isLoading: false,
-        isPinEnabled: false,
-      );
-
-      return true;
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      print('❌ PIN setup failed: $e');
       return false;
     }
   }
@@ -212,68 +219,103 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _authService.enableBiometric();
 
       state = state.copyWith(
-        isLoading: false,
         isBiometricEnabled: true,
+        isLoading: false,
       );
 
+      print('✅ Biometric enabled');
       return true;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
       );
+      print('❌ Failed to enable biometric: $e');
       return false;
     }
   }
 
-  // Disable biometric authentication
-  Future<bool> disableBiometric() async {
+  // Disable authentication methods
+  Future<void> disablePin() async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-
-      await _authService.disableBiometric();
-
-      state = state.copyWith(
-        isLoading: false,
-        isBiometricEnabled: false,
-      );
-
-      return true;
+      await _authService.disablePin();
+      state = state.copyWith(isPinEnabled: false);
+      print('🔓 PIN disabled');
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-      return false;
+      print('❌ Failed to disable PIN: $e');
     }
   }
 
-  // Logout
+  Future<void> disableBiometric() async {
+    try {
+      await _authService.disableBiometric();
+      state = state.copyWith(isBiometricEnabled: false);
+      print('🔓 Biometric disabled');
+    } catch (e) {
+      print('❌ Failed to disable biometric: $e');
+    }
+  }
+
+  // Logout/unauthenticate
   void logout() {
     state = state.copyWith(isAuthenticated: false);
+    print('🚪 User logged out');
   }
 
-  // Clear error
-  void clearError() {
-    state = state.copyWith(error: null);
+  // Force refresh auth state (useful after settings changes)
+  Future<void> refreshAuthState() async {
+    await _initializeAuthState();
   }
 
-  // Reset authentication
-  Future<bool> resetAuthentication() async {
+  // Reset authentication (for testing or account reset)
+  Future<void> resetAuthentication() async {
+    try {
+      await _authService.resetAuthentication();
+      state = const AuthState(); // Reset to initial state
+      print('🔄 Authentication reset');
+    } catch (e) {
+      print('❌ Failed to reset authentication: $e');
+    }
+  }
+
+  // Set authenticated state (internal use)
+  void setAuthenticated(bool authenticated) {
+    state = state.copyWith(isAuthenticated: authenticated);
+  }
+
+  // Change PIN
+  Future<bool> changePin(String oldPin, String newPin) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      await _authService.resetAuthentication();
+      await _authService.changePin(oldPin, newPin);
 
-      state = const AuthState();
+      state = state.copyWith(isLoading: false);
 
+      print('✅ PIN changed successfully');
       return true;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
       );
+      print('❌ Failed to change PIN: $e');
       return false;
     }
+  }
+
+  // Get failed attempts count
+  int getFailedAttempts() {
+    return _authService.getFailedAttempts();
+  }
+
+  // Check lockout status
+  Future<Duration?> getLockoutTime() async {
+    return await _authService.getRemainingLockoutTime();
+  }
+
+  // Clear error state
+  void clearError() {
+    state = state.copyWith(error: null);
   }
 }

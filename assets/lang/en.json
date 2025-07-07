@@ -565,5 +565,47 @@
     "selectTime": "Select time", 
     "selectDateTime": "Select date and time",
     "selectDateRange": "Select date range"
+  },
+   "onboarding": {
+    "welcome": {
+      "title": "Welcome to Money Manager",
+      "subtitle": "Your Personal Finance Companion", 
+      "description": "Take control of your finances with our comprehensive money management app. Track expenses, manage budgets, and achieve your financial goals."
+    },
+    "features": {
+      "title": "Powerful Features",
+      "subtitle": "Everything You Need",
+      "description": "Track transactions, create budgets, analyze spending patterns, and get insights to make better financial decisions."
+    },
+    "security": {
+      "title": "Bank-Level Security",
+      "subtitle": "Your Data is Safe",
+      "description": "Your financial data is protected with PIN codes, biometric authentication, and encrypted local storage."
+    },
+    "getStarted": "Get Started",
+    "pinSetup": {
+      "title": "Secure Your App",
+      "description": "Would you like to set up a PIN code to protect your financial data? You can always set this up later in settings.",
+      "setup": "Set Up PIN",
+      "skip": "Skip for Now"
+    },
+    "error": "Something went wrong during setup. Please try again."
+  },
+  "splash": {
+    "loading": {
+      "settings": "Loading settings...",
+      "auth": "Checking authentication...",
+      "services": "Verifying services...",
+      "data": "Preparing data...",
+      "finalizing": "Finalizing..."
+    },
+    "init": {
+      "complete": "Ready to go!"
+    },
+    "error": {
+      "title": "Initialization Error",
+      "general": "Something went wrong during app startup",
+      "retry": "Try Again"
+    }
   }
 }

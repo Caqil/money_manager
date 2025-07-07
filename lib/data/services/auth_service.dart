@@ -1,3 +1,4 @@
+// lib/data/services/auth_service.dart
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
@@ -20,6 +21,9 @@ class AuthService {
     _instance ??= AuthService._internal();
     return _instance!;
   }
+
+  // FIXED: Add public getter for initialization status
+  bool get isInitialized => _isInitialized;
 
   // Initialize auth service
   static Future<AuthService> init() async {
@@ -173,202 +177,162 @@ class AuthService {
       }
     } catch (e) {
       if (e is AuthenticationException) rethrow;
+      throw AuthenticationException(message: 'PIN verification failed: $e');
+    }
+  }
+
+  // Check if PIN is enabled
+  bool isPinEnabled() {
+    try {
+      if (!_isInitialized) {
+        // If not initialized, we can't check PIN status safely
+        return false;
+      }
+      return _prefs.getBool(AppConstants.keyPinEnabled) ?? false;
+    } catch (e) {
+      print('Error checking PIN status: $e');
       return false;
     }
   }
 
-  // Change PIN
-  Future<void> changePin(String oldPin, String newPin) async {
+  // Check if biometric is enabled
+  bool isBiometricEnabled() {
     try {
-      if (!_isInitialized) await _initialize();
-
-      if (!await verifyPin(oldPin)) {
-        throw AuthenticationFailedException();
+      if (!_isInitialized) {
+        return false;
       }
-
-      if (!ValidationHelper.isValidPin(newPin)) {
-        throw ValidationException(message: 'Invalid new PIN format');
-      }
-
-      await setupPin(newPin);
+      return _prefs.getBool(AppConstants.keyBiometricEnabled) ?? false;
     } catch (e) {
-      if (e is AuthenticationFailedException || e is ValidationException)
-        rethrow;
-      throw AuthenticationException(message: 'Failed to change PIN: $e');
+      print('Error checking biometric status: $e');
+      return false;
     }
   }
 
-  // Remove PIN
-  Future<void> removePin(String currentPin) async {
+  // FIXED: Get remaining lockout time safely
+  Future<Duration?> getRemainingLockoutTime() async {
     try {
-      if (!_isInitialized) await _initialize();
-
-      if (!await verifyPin(currentPin)) {
-        throw AuthenticationFailedException();
+      // Ensure initialization before accessing _prefs
+      if (!_isInitialized) {
+        await _initialize();
       }
 
-      await _prefs.remove(AppConstants.keyPinHash);
-      await _prefs.remove('pin_salt');
-      await _prefs.setBool(AppConstants.keyPinEnabled, false);
-      await _prefs.remove('pin_attempts');
-      await _prefs.remove('pin_locked_until');
+      final lockoutExpiry = _prefs.getInt('pin_locked_until') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      if (lockoutExpiry > now) {
+        final remainingMs = lockoutExpiry - now;
+        return Duration(milliseconds: remainingMs);
+      }
+
+      return null;
     } catch (e) {
-      if (e is AuthenticationFailedException) rethrow;
-      throw AuthenticationException(message: 'Failed to remove PIN: $e');
+      // Log the error but don't crash
+      print('Error getting lockout time: $e');
+      return null;
     }
   }
 
-  // Enable biometric authentication
+  // ADDED: Enable biometric authentication
   Future<void> enableBiometric() async {
     try {
       if (!_isInitialized) await _initialize();
 
+      // Check if biometric is available
       if (!await isBiometricAvailable()) {
-        throw BiometricNotAvailableException();
-      }
-
-      // Test biometric authentication before enabling
-      final isAuthenticated = await authenticateWithBiometrics(
-        reason: 'Verify your identity to enable biometric authentication',
-      );
-
-      if (!isAuthenticated) {
-        throw AuthenticationFailedException();
+        throw AuthenticationException(
+          message: 'Biometric authentication is not available on this device',
+        );
       }
 
       await _prefs.setBool(AppConstants.keyBiometricEnabled, true);
     } catch (e) {
-      rethrow;
+      throw AuthenticationException(
+        message: 'Failed to enable biometric authentication: $e',
+      );
     }
   }
 
-  // Disable biometric authentication
+  // ADDED: Disable PIN authentication
+  Future<void> disablePin() async {
+    try {
+      if (!_isInitialized) await _initialize();
+
+      await _prefs.setBool(AppConstants.keyPinEnabled, false);
+      await _prefs.remove(AppConstants.keyPinHash);
+      await _prefs.remove('pin_salt');
+      await _prefs.setInt('pin_attempts', 0);
+      await _prefs.setInt('pin_locked_until', 0);
+    } catch (e) {
+      throw AuthenticationException(
+        message: 'Failed to disable PIN: $e',
+      );
+    }
+  }
+
+  // ADDED: Disable biometric authentication
   Future<void> disableBiometric() async {
     try {
       if (!_isInitialized) await _initialize();
 
       await _prefs.setBool(AppConstants.keyBiometricEnabled, false);
     } catch (e) {
-      throw AuthenticationException(message: 'Failed to disable biometric: $e');
+      throw AuthenticationException(
+        message: 'Failed to disable biometric authentication: $e',
+      );
     }
   }
 
-  // Check if PIN is enabled
-  bool isPinEnabled() {
-    return _prefs.getBool(AppConstants.keyPinEnabled) ?? false;
-  }
-
-  // Check if biometric is enabled
-  bool isBiometricEnabled() {
-    return _prefs.getBool(AppConstants.keyBiometricEnabled) ?? false;
-  }
-
-  // Check if any authentication method is enabled
-  bool isAuthenticationEnabled() {
-    return isPinEnabled() || isBiometricEnabled();
-  }
-
-  // Get remaining lockout time
-  Duration? getRemainingLockoutTime() {
-    final lockoutExpiry = _prefs.getInt('pin_locked_until') ?? 0;
-    final now = DateTime.now().millisecondsSinceEpoch;
-
-    if (lockoutExpiry > now) {
-      return Duration(milliseconds: lockoutExpiry - now);
-    }
-
-    return null;
-  }
-
-  // Get failed PIN attempts count
-  int getFailedAttempts() {
-    return _prefs.getInt('pin_attempts') ?? 0;
-  }
-
-  // Check if account is locked
-  bool isAccountLocked() {
-    final lockoutExpiry = _prefs.getInt('pin_locked_until') ?? 0;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return lockoutExpiry > now;
-  }
-
-  // Authenticate with available methods
-  Future<bool> authenticate({
-    String reason = 'Please authenticate to access your financial data',
-  }) async {
-    try {
-      if (!_isInitialized) await _initialize();
-
-      // Check if account is locked
-      if (isAccountLocked()) {
-        final remaining = getRemainingLockoutTime();
-        if (remaining != null) {
-          final minutes = remaining.inMinutes;
-          throw AuthenticationException(
-            message: 'Account locked. Try again in $minutes minutes.',
-          );
-        }
-      }
-
-      // Try biometric first if enabled and available
-      if (isBiometricEnabled() && await isBiometricAvailable()) {
-        try {
-          return await authenticateWithBiometrics(reason: reason);
-        } catch (e) {
-          // Fall back to PIN if biometric fails and PIN is enabled
-          if (!isPinEnabled()) rethrow;
-          // PIN authentication would be handled by the UI layer
-          return false;
-        }
-      }
-
-      // If only PIN is enabled, PIN authentication would be handled by the UI layer
-      return isPinEnabled();
-    } catch (e) {
-      if (e is AuthenticationException) rethrow;
-      throw AuthenticationFailedException();
-    }
-  }
-
-  // Get authentication status
-  Future<AuthStatus> getAuthStatus() async {
-    try {
-      if (!_isInitialized) await _initialize();
-
-      if (!isAuthenticationEnabled()) {
-        return AuthStatus.noAuthenticationSet;
-      }
-
-      final biometricAvailable = await isBiometricAvailable();
-
-      if (isBiometricEnabled() && biometricAvailable && isPinEnabled()) {
-        return AuthStatus.bothEnabled;
-      } else if (isBiometricEnabled() && biometricAvailable) {
-        return AuthStatus.biometricEnabled;
-      } else if (isPinEnabled()) {
-        return AuthStatus.pinEnabled;
-      } else {
-        return AuthStatus.noAuthenticationSet;
-      }
-    } catch (e) {
-      return AuthStatus.noAuthenticationSet;
-    }
-  }
-
-  // Reset all authentication
+  // ADDED: Reset all authentication (for account reset or testing)
   Future<void> resetAuthentication() async {
     try {
       if (!_isInitialized) await _initialize();
 
-      await _prefs.remove(AppConstants.keyPinHash);
-      await _prefs.remove('pin_salt');
       await _prefs.setBool(AppConstants.keyPinEnabled, false);
       await _prefs.setBool(AppConstants.keyBiometricEnabled, false);
-      await _prefs.remove('pin_attempts');
-      await _prefs.remove('pin_locked_until');
+      await _prefs.remove(AppConstants.keyPinHash);
+      await _prefs.remove('pin_salt');
+      await _prefs.setInt('pin_attempts', 0);
+      await _prefs.setInt('pin_locked_until', 0);
     } catch (e) {
       throw AuthenticationException(
-          message: 'Failed to reset authentication: $e');
+        message: 'Failed to reset authentication: $e',
+      );
+    }
+  }
+
+  // ADDED: Check if any authentication method is enabled
+  bool hasAuthenticationEnabled() {
+    return isPinEnabled() || isBiometricEnabled();
+  }
+
+  // ADDED: Get authentication methods summary
+  Map<String, bool> getAuthenticationStatus() {
+    return {
+      'pin_enabled': isPinEnabled(),
+      'biometric_enabled': isBiometricEnabled(),
+      'any_enabled': hasAuthenticationEnabled(),
+    };
+  }
+
+  // ADDED: Get auth status safely
+  Future<AuthStatus> getAuthStatus() async {
+    try {
+      if (!_isInitialized) {
+        await _initialize();
+      }
+
+      return AuthStatus(
+        isPinEnabled: isPinEnabled(),
+        isBiometricEnabled: isBiometricEnabled(),
+        isLocked: await getRemainingLockoutTime() != null,
+      );
+    } catch (e) {
+      print('Error getting auth status: $e');
+      return const AuthStatus(
+        isPinEnabled: false,
+        isBiometricEnabled: false,
+        isLocked: false,
+      );
     }
   }
 
@@ -400,6 +364,34 @@ class AuthService {
     }
   }
 
+  // Get failed PIN attempts count
+  int getFailedAttempts() {
+    try {
+      if (!_isInitialized) return 0;
+      return _prefs.getInt('pin_attempts') ?? 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Change PIN
+  Future<void> changePin(String oldPin, String newPin) async {
+    try {
+      if (!_isInitialized) await _initialize();
+
+      // Verify old PIN first
+      if (!await verifyPin(oldPin)) {
+        throw AuthenticationException(message: 'Current PIN is incorrect');
+      }
+
+      // Set new PIN
+      await setupPin(newPin);
+    } catch (e) {
+      if (e is AuthenticationException) rethrow;
+      throw AuthenticationException(message: 'Failed to change PIN: $e');
+    }
+  }
+
   // Private helper methods
   String _generateSalt() {
     final random = Random.secure();
@@ -419,12 +411,17 @@ class AuthService {
   }
 }
 
-// Authentication status enum
-enum AuthStatus {
-  noAuthenticationSet,
-  pinEnabled,
-  biometricEnabled,
-  bothEnabled,
+// ADDED: Auth status class
+class AuthStatus {
+  final bool isPinEnabled;
+  final bool isBiometricEnabled;
+  final bool isLocked;
+
+  const AuthStatus({
+    required this.isPinEnabled,
+    required this.isBiometricEnabled,
+    required this.isLocked,
+  });
 }
 
 // Biometric info class
