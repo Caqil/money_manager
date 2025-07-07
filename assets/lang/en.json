@@ -53,7 +53,10 @@
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
     "selectAll": "Select All",
-    "clearAll": "Clear All"
+    "clearAll": "Clear All",
+    "or": "or",
+    "enable": "Enable",
+    "disable": "Disable"
   },
   "navigation": {
     "home": "Home",

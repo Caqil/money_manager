@@ -2,14 +2,34 @@
 // 1. lib/core/constants/app_constants.dart
 // ==========================================
 
+import 'dart:ui';
+
 class AppConstants {
   AppConstants._();
 
   // App Info
   static const String appName = 'Money Manager';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Complete offline money management solution';
-  
+  static const String appDescription =
+      'Complete offline money management solution';
+  // Localization
+  static const String localizationPath = 'assets/lang';
+  static const Locale defaultLocale = Locale('en', 'US');
+  static const List<Locale> supportedLocales = [
+    Locale('en', 'US'), // English
+    Locale('es', 'ES'), // Spanish
+    Locale('fr', 'FR'), // French
+    Locale('de', 'DE'), // German
+    Locale('it', 'IT'), // Italian
+    Locale('pt', 'BR'), // Portuguese (Brazil)
+    Locale('ru', 'RU'), // Russian
+    Locale('ja', 'JP'), // Japanese
+    Locale('ko', 'KR'), // Korean
+    Locale('zh', 'CN'), // Chinese (Simplified)
+    Locale('ar', 'SA'), // Arabic
+    Locale('hi', 'IN'), // Hindi
+  ];
+
   // Database
   static const String hiveBoxTransactions = 'transactions';
   static const String hiveBoxBudgets = 'budgets';
@@ -23,7 +43,7 @@ class AppConstants {
   static const String hiveBoxCurrencies = 'currencies';
   static const String hiveBoxSettings = 'settings';
   static const String hiveBoxUserData = 'user_data';
-  
+
   // SharedPreferences Keys
   static const String keyThemeMode = 'theme_mode';
   static const String keyLanguage = 'language';
@@ -35,19 +55,19 @@ class AppConstants {
   static const String keyLastBackup = 'last_backup';
   static const String keyNotificationsEnabled = 'notifications_enabled';
   static const String keyAutoBackupEnabled = 'auto_backup_enabled';
-  
+
   // Default Values
   static const String defaultCurrency = 'USD';
   static const String defaultLanguage = 'en';
   static const int defaultDecimalPlaces = 2;
   static const double defaultBudgetAlertThreshold = 0.8;
   static const int defaultNotificationDaysBefore = 1;
-  
+
   // File Paths
   static const String backupFileName = 'money_manager_backup';
   static const String exportFileName = 'transactions_export';
   static const String receiptImagesFolder = 'receipt_images';
-  
+
   // Limits
   static const int maxTransactionsPerQuery = 1000;
   static const int maxFileSize = 10 * 1024 * 1024; // 10MB
@@ -56,35 +76,35 @@ class AppConstants {
   static const int maxAccountNameLength = 50;
   static const int maxGoalNameLength = 50;
   static const int maxNotesLength = 500;
-  
+
   // Animation Durations
   static const Duration shortAnimationDuration = Duration(milliseconds: 200);
   static const Duration mediumAnimationDuration = Duration(milliseconds: 300);
   static const Duration longAnimationDuration = Duration(milliseconds: 500);
-  
+
   // Chart Settings
   static const int maxChartDataPoints = 50;
   static const double chartAnimationDuration = 1.5;
-  
+
   // Notification IDs
   static const int budgetAlertNotificationId = 1001;
   static const int recurringTransactionNotificationId = 1002;
   static const int goalMilestoneNotificationId = 1003;
   static const int backupReminderNotificationId = 1004;
-  
+
   // Voice Commands
   static const Duration voiceInputTimeout = Duration(seconds: 30);
   static const Duration voiceInputPause = Duration(seconds: 3);
-  
+
   // Security
   static const int pinLength = 4;
   static const int maxLoginAttempts = 5;
   static const Duration lockoutDuration = Duration(minutes: 5);
-  
+
   // Export/Import
   static const List<String> supportedImageFormats = ['jpg', 'jpeg', 'png'];
   static const List<String> supportedBackupFormats = ['json', 'csv'];
-  
+
   // URLs
   static const String privacyPolicyUrl = 'https://example.com/privacy';
   static const String termsOfServiceUrl = 'https://example.com/terms';

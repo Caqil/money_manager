@@ -1,3 +1,7 @@
+// ==========================================
+// lib/presentation/providers/settings_provider.dart
+// ==========================================
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 
@@ -95,23 +99,14 @@ class SettingsState {
     this.notificationsEnabled = true,
     this.autoBackupEnabled = false,
     this.budgetAlertThreshold = 0.8,
-    this.transactionReminderDays = 1,
+    this.transactionReminderDays = 7,
     this.preferredExportFormat = 'csv',
     this.chartAnimationsEnabled = true,
-    this.voiceInputEnabled = true,
-    this.voiceInputLanguage = 'en_US',
-    this.recentCurrencies = const ['USD'],
-    this.dashboardWidgets = const [
-      'balance_card',
-      'recent_transactions',
-      'budget_overview',
-      'spending_chart',
-    ],
-    this.quickActions = const [
-      'add_expense',
-      'add_income',
-      'transfer',
-    ],
+    this.voiceInputEnabled = false,
+    this.voiceInputLanguage = 'en',
+    this.recentCurrencies = const [],
+    this.dashboardWidgets = const [],
+    this.quickActions = const [],
     this.transactionsPerPage = 20,
     this.defaultTransactionView = 'list',
     this.analyticsTrackingEnabled = false,
@@ -179,15 +174,14 @@ class SettingsState {
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsService _service;
 
-  SettingsNotifier(this._service) : super(const SettingsState()) {
-    _loadSettings();
-  }
+  SettingsNotifier(this._service) : super(const SettingsState());
 
-  // Load all settings
-  Future<void> _loadSettings() async {
+  // Load all settings from service
+  Future<void> loadSettings() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
+      // Load all settings from the service
       final themeMode = _service.getThemeMode();
       final language = _service.getLanguage();
       final baseCurrency = _service.getBaseCurrency();
@@ -208,7 +202,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final isFirstLaunch = _service.isFirstLaunch();
       final lastBackupDate = _service.getLastBackupDate();
 
-      state = state.copyWith(
+      state = SettingsState(
         themeMode: themeMode,
         language: language,
         baseCurrency: baseCurrency,
@@ -271,7 +265,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _service.setBaseCurrency(currencyCode);
-      await _service.addRecentCurrency(currencyCode);
       state = state.copyWith(
         baseCurrency: currencyCode,
         recentCurrencies: _service.getRecentCurrencies(),
@@ -294,7 +287,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update notifications setting: $e',
+        error: 'Failed to update notification settings: $e',
       );
     }
   }
@@ -308,7 +301,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update auto backup setting: $e',
+        error: 'Failed to update auto backup: $e',
       );
     }
   }
@@ -327,6 +320,34 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     }
   }
 
+  // Set transaction reminder days
+  Future<void> setTransactionReminderDays(int days) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setTransactionReminderDays(days);
+      state = state.copyWith(transactionReminderDays: days, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update transaction reminder days: $e',
+      );
+    }
+  }
+
+  // Set preferred export format
+  Future<void> setPreferredExportFormat(String format) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setPreferredExportFormat(format);
+      state = state.copyWith(preferredExportFormat: format, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update export format: $e',
+      );
+    }
+  }
+
   // Set chart animations enabled
   Future<void> setChartAnimationsEnabled(bool enabled) async {
     try {
@@ -336,7 +357,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update chart animations setting: $e',
+        error: 'Failed to update chart animations: $e',
       );
     }
   }
@@ -350,7 +371,38 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update voice input setting: $e',
+        error: 'Failed to update voice input: $e',
+      );
+    }
+  }
+
+  // Set voice input language
+  Future<void> setVoiceInputLanguage(String language) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setVoiceInputLanguage(language);
+      state = state.copyWith(voiceInputLanguage: language, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update voice input language: $e',
+      );
+    }
+  }
+
+  // Add recent currency
+  Future<void> addRecentCurrency(String currencyCode) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.addRecentCurrency(currencyCode);
+      state = state.copyWith(
+        recentCurrencies: _service.getRecentCurrencies(),
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to add recent currency: $e',
       );
     }
   }
@@ -379,6 +431,34 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to update quick actions: $e',
+      );
+    }
+  }
+
+  // Set transactions per page
+  Future<void> setTransactionsPerPage(int count) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setTransactionsPerPage(count);
+      state = state.copyWith(transactionsPerPage: count, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update transactions per page: $e',
+      );
+    }
+  }
+
+  // Set default transaction view
+  Future<void> setDefaultTransactionView(String view) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      await _service.setDefaultTransactionView(view);
+      state = state.copyWith(defaultTransactionView: view, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to update default transaction view: $e',
       );
     }
   }
@@ -426,69 +506,41 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     }
   }
 
-  // Update transaction reminder days
-  Future<void> setTransactionReminderDays(int days) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setTransactionReminderDays(days);
-      state = state.copyWith(transactionReminderDays: days, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to update transaction reminder days: $e',
-      );
-    }
-  }
-
-  // Update preferred export format
-  Future<void> setPreferredExportFormat(String format) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setPreferredExportFormat(format);
-      state = state.copyWith(preferredExportFormat: format, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to update export format: $e',
-      );
-    }
-  }
-
-  // Reset all settings
-  Future<bool> resetAllSettings() async {
+  // Reset all settings to defaults
+  Future<void> resetSettings() async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _service.resetAllSettings();
-      state = const SettingsState();
-      await _loadSettings();
-      return true;
+      await loadSettings(); // Reload all settings
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to reset settings: $e',
       );
-      return false;
     }
   }
 
   // Export settings
-  Map<String, dynamic> exportSettings() {
-    return _service.exportSettings();
+  Future<Map<String, dynamic>> exportSettings() async {
+    try {
+      return await _service.exportSettings();
+    } catch (e) {
+      state = state.copyWith(error: 'Failed to export settings: $e');
+      rethrow;
+    }
   }
 
   // Import settings
-  Future<bool> importSettings(Map<String, dynamic> settings) async {
+  Future<void> importSettings(Map<String, dynamic> settings) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _service.importSettings(settings);
-      await _loadSettings();
-      return true;
+      await loadSettings(); // Reload all settings
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to import settings: $e',
       );
-      return false;
     }
   }
 
@@ -499,6 +551,84 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   // Refresh settings
   Future<void> refresh() async {
-    await _loadSettings();
+    await loadSettings();
   }
 }
+
+// ==========================================
+// lib/data/services/settings_service.dart (Missing Methods)
+// ==========================================
+
+// Add these methods to your existing SettingsService class if they're missing:
+
+/*
+class SettingsService {
+  // ... existing code ...
+
+  // Transaction reminder days
+  int getTransactionReminderDays() {
+    return _prefs.getInt('transaction_reminder_days') ?? 7;
+  }
+
+  Future<void> setTransactionReminderDays(int days) async {
+    await _prefs.setInt('transaction_reminder_days', days);
+  }
+
+  // Preferred export format
+  String getPreferredExportFormat() {
+    return _prefs.getString('preferred_export_format') ?? 'csv';
+  }
+
+  Future<void> setPreferredExportFormat(String format) async {
+    await _prefs.setString('preferred_export_format', format);
+  }
+
+  // Chart animations
+  bool areChartAnimationsEnabled() {
+    return _prefs.getBool('chart_animations_enabled') ?? true;
+  }
+
+  Future<void> setChartAnimationsEnabled(bool enabled) async {
+    await _prefs.setBool('chart_animations_enabled', enabled);
+  }
+
+  // Voice input
+  bool isVoiceInputEnabled() {
+    return _prefs.getBool('voice_input_enabled') ?? false;
+  }
+
+  Future<void> setVoiceInputEnabled(bool enabled) async {
+    await _prefs.setBool('voice_input_enabled', enabled);
+  }
+
+  String getVoiceInputLanguage() {
+    return _prefs.getString('voice_input_language') ?? 'en';
+  }
+
+  Future<void> setVoiceInputLanguage(String language) async {
+    await _prefs.setString('voice_input_language', language);
+  }
+
+  // Recent currencies
+  List<String> getRecentCurrencies() {
+    return _prefs.getStringList('recent_currencies') ?? [];
+  }
+
+  Future<void> addRecentCurrency(String currencyCode) async {
+    final recent = getRecentCurrencies();
+    recent.remove(currencyCode); // Remove if exists
+    recent.insert(0, currencyCode); // Add to front
+    if (recent.length > 5) {
+      recent.removeLast(); // Keep only 5 recent
+    }
+    await _prefs.setStringList('recent_currencies', recent);
+  }
+
+  // Reset all settings
+  Future<void> resetSettings() async {
+    await _prefs.clear();
+  }
+
+  // Export/Import settings methods are already provided in your existing code
+}
+*/
