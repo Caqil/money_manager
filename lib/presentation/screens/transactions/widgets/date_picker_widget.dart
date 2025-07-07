@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../../../core/constants/colors.dart';
 import '../../../../core/constants/dimensions.dart';
@@ -40,12 +41,16 @@ class DatePickerWidget extends StatefulWidget {
 class _DatePickerWidgetState extends State<DatePickerWidget> {
   DateTime? _selectedDate;
   late DateFormat _formatter;
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+  final DateRangePickerController _datePickerController = DateRangePickerController();
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.selectedDate;
     _formatter = widget.dateFormat ?? DateFormat.yMMMd();
+    _datePickerController.selectedDate = widget.selectedDate;
   }
 
   @override
@@ -55,10 +60,18 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
       setState(() {
         _selectedDate = widget.selectedDate;
       });
+      _datePickerController.selectedDate = widget.selectedDate;
     }
     if (widget.dateFormat != oldWidget.dateFormat) {
       _formatter = widget.dateFormat ?? DateFormat.yMMMd();
     }
+  }
+
+  @override
+  void dispose() {
+    _overlayEntry?.remove();
+    _datePickerController.dispose();
+    super.dispose();
   }
 
   @override
@@ -121,120 +134,289 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
   }
 
   Widget _buildDateSelector(ShadThemeData theme) {
-    return GestureDetector(
-      onTap: widget.enabled ? _showDatePicker : null,
-      child: Container(
-        height: 48,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingM,
-          vertical: AppDimensions.paddingS,
-        ),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: widget.errorText != null 
-                ? AppColors.error 
-                : theme.colorScheme.border,
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: GestureDetector(
+        onTap: widget.enabled ? _showDatePicker : null,
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingM,
+            vertical: AppDimensions.paddingS,
           ),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          color: widget.enabled 
-              ? Colors.transparent 
-              : theme.colorScheme.muted,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.calendar_today_outlined,
-              size: 18,
-              color: widget.enabled 
-                  ? theme.colorScheme.foreground 
-                  : theme.colorScheme.mutedForeground,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: widget.errorText != null 
+                  ? AppColors.error 
+                  : theme.colorScheme.border,
             ),
-            const SizedBox(width: AppDimensions.spacingS),
-            Expanded(
-              child: Text(
-                _selectedDate != null 
-                    ? _formatter.format(_selectedDate!)
-                    : widget.placeholder ?? 'transactions.selectDate'.tr(),
-                style: theme.textTheme.p.copyWith(
-                  color: _selectedDate != null 
-                      ? theme.colorScheme.foreground
-                      : theme.colorScheme.mutedForeground,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+            color: widget.enabled 
+                ? theme.colorScheme.background
+                : theme.colorScheme.muted,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.calendar_today,
+                size: AppDimensions.iconS,
+                color: widget.enabled 
+                    ? theme.colorScheme.foreground
+                    : theme.colorScheme.mutedForeground,
+              ),
+              const SizedBox(width: AppDimensions.spacingS),
+              Expanded(
+                child: Text(
+                  _selectedDate != null
+                      ? _formatter.format(_selectedDate!)
+                      : (widget.placeholder ?? 'transactions.selectDate'.tr()),
+                  style: theme.textTheme.p.copyWith(
+                    color: _selectedDate != null
+                        ? (widget.enabled 
+                            ? theme.colorScheme.foreground
+                            : theme.colorScheme.mutedForeground)
+                        : theme.colorScheme.mutedForeground,
+                  ),
                 ),
               ),
-            ),
-            if (_selectedDate != null && widget.enabled)
-              GestureDetector(
-                onTap: _clearDate,
-                child: Icon(
-                  Icons.clear,
-                  size: 18,
-                  color: theme.colorScheme.mutedForeground,
+              if (_selectedDate != null && widget.enabled)
+                GestureDetector(
+                  onTap: _clearDate,
+                  child: Icon(
+                    Icons.clear,
+                    size: AppDimensions.iconXs,
+                    color: theme.colorScheme.mutedForeground,
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildQuickOptionsButton(ShadThemeData theme) {
-    return ShadPopover(
-      popover: (context) => _buildQuickOptionsPopover(),
-      child: ShadButton.outline(
-        size: ShadButtonSize.sm,
-        onPressed: widget.enabled ? () {} : null,
-        child: const Icon(Icons.access_time, size: 16),
-      ),
-    );
-  }
-
-  Widget _buildQuickOptionsPopover() {
-    final quickOptions = _getQuickDateOptions();
-    
-    return Padding(
-      padding: const EdgeInsets.all(AppDimensions.paddingS),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'transactions.quickDateOptions'.tr(),
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: AppDimensions.spacingS),
-          ...quickOptions.map((option) => ListTile(
-            dense: true,
-            title: Text(option.label),
-            subtitle: option.subtitle != null ? Text(option.subtitle!) : null,
-            onTap: () {
-              _selectDate(option.date);
-              Navigator.of(context).pop();
-            },
-          )),
-        ],
+    return ShadButton.outline(
+      onPressed: widget.enabled ? _showQuickOptionsModal : null,
+      child: const Icon(
+        Icons.access_time,
+        size: AppDimensions.iconS,
       ),
     );
   }
 
   Widget _buildQuickDateOptions() {
-    final quickOptions = _getQuickDateOptions().take(4).toList();
-    
     return Wrap(
       spacing: AppDimensions.spacingS,
       runSpacing: AppDimensions.spacingXs,
-      children: quickOptions.map((option) => ShadButton.outline(
-        size: ShadButtonSize.sm,
-        onPressed: widget.enabled 
-            ? () => _selectDate(option.date)
-            : null,
-        child: Text(
-          option.label,
-          style: const TextStyle(fontSize: 12),
+      children: _getQuickDateOptions().take(4).toList().map((option) => 
+        ShadButton.outline(
+          size: ShadButtonSize.sm,
+          onPressed: widget.enabled 
+              ? () => _selectDate(option.date)
+              : null,
+          child: Text(
+            option.label,
+            style: const TextStyle(fontSize: 12),
+          ),
+        )
+      ).toList(),
+    );
+  }
+
+  void _showDatePicker() {
+    if (!widget.enabled) return;
+
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _hideDatePicker() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    var size = renderBox.size;
+    var offset = renderBox.localToGlobal(Offset.zero);
+
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        left: offset.dx,
+        top: offset.dy + size.height + 5,
+        width: size.width.clamp(300.0, 400.0),
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: ShadTheme.of(context).colorScheme.border,
+                ),
+                color: ShadTheme.of(context).colorScheme.background,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Quick date options header
+                  _buildQuickDateOptionsHeader(),
+                  
+                  // Syncfusion Date Picker
+                  SfDateRangePicker(
+                    controller: _datePickerController,
+                    view: DateRangePickerView.month,
+                    selectionMode: DateRangePickerSelectionMode.single,
+                    showNavigationArrow: true,
+                    allowViewNavigation: true,
+                    enablePastDates: true,
+                    minDate: widget.minDate,
+                    maxDate: widget.maxDate,
+                    initialSelectedDate: _selectedDate,
+                    onSelectionChanged: _onSelectionChanged,
+                    monthViewSettings: const DateRangePickerMonthViewSettings(
+                      enableSwipeSelection: false,
+                    ),
+                    monthCellStyle: DateRangePickerMonthCellStyle(
+                      textStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.foreground,
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    selectionTextStyle: TextStyle(
+                      color: ShadTheme.of(context).colorScheme.primaryForeground,
+                    ),
+                    selectionColor: ShadTheme.of(context).colorScheme.primary,
+                    todayHighlightColor: ShadTheme.of(context).colorScheme.primary,
+                    headerStyle: DateRangePickerHeaderStyle(
+                      textStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    yearCellStyle: DateRangePickerYearCellStyle(
+                      textStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.foreground,
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  
+                  // Action buttons
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ShadButton.outline(
+                          onPressed: () {
+                            _hideDatePicker();
+                          },
+                          child: Text('common.cancel'.tr()),
+                        ),
+                        const SizedBox(width: 8),
+                        ShadButton(
+                          onPressed: () {
+                            _hideDatePicker();
+                          },
+                          child: Text('common.done'.tr()),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-      )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildQuickDateOptionsHeader() {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: ShadTheme.of(context).colorScheme.border,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'transactions.quickSelect'.tr(),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: ShadTheme.of(context).colorScheme.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: _getQuickDateOptions().map((option) => ShadButton.outline(
+              size: ShadButtonSize.sm,
+              onPressed: () {
+                _selectDate(option.date);
+                _hideDatePicker();
+              },
+              child: Text(option.label),
+            )).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
+    if (args.value is DateTime) {
+      final selectedDate = args.value as DateTime;
+      _selectDate(selectedDate);
+    }
+  }
+
+  void _showQuickOptionsModal() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'transactions.quickSelect'.tr(),
+              style: ShadTheme.of(context).textTheme.h3,
+            ),
+            const SizedBox(height: AppDimensions.spacingM),
+            ...(_getQuickDateOptions().map((option) => ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: Text(option.label),
+              subtitle: option.subtitle != null ? Text(option.subtitle!) : null,
+              onTap: () {
+                _selectDate(option.date);
+                Navigator.of(context).pop();
+              },
+            )).toList()),
+          ],
+        ),
+      ),
     );
   }
 
@@ -281,40 +463,19 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
     ];
   }
 
-  Future<void> _showDatePicker() async {
-    final now = DateTime.now();
-    final firstDate = widget.minDate ?? DateTime(now.year - 10);
-    final lastDate = widget.maxDate ?? DateTime(now.year + 1);
-    
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? now,
-      firstDate: firstDate,
-      lastDate: lastDate,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Colors.black87,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (selectedDate != null) {
-      _selectDate(selectedDate);
-    }
-  }
-
   void _selectDate(DateTime date) {
+    // Validate against min/max dates
+    if (widget.minDate != null && date.isBefore(widget.minDate!)) {
+      return;
+    }
+    if (widget.maxDate != null && date.isAfter(widget.maxDate!)) {
+      return;
+    }
+
     setState(() {
       _selectedDate = date;
     });
+    _datePickerController.selectedDate = date;
     widget.onDateChanged(date);
   }
 
@@ -322,6 +483,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
     setState(() {
       _selectedDate = null;
     });
+    _datePickerController.selectedDate = null;
     widget.onDateChanged(null);
   }
 }
@@ -336,85 +498,4 @@ class QuickDateOption {
     required this.date,
     this.subtitle,
   });
-}
-
-// Extension for date utilities
-extension DatePickerExtensions on DateTime {
-  /// Gets the start of the week (Monday)
-  DateTime get startOfWeek {
-    final daysFromMonday = weekday - 1;
-    return subtract(Duration(days: daysFromMonday));
-  }
-
-  /// Gets the end of the week (Sunday)
-  DateTime get endOfWeek {
-    final daysToSunday = 7 - weekday;
-    return add(Duration(days: daysToSunday));
-  }
-
-  /// Gets the start of the month
-  DateTime get startOfMonth {
-    return DateTime(year, month, 1);
-  }
-
-  /// Gets the end of the month
-  DateTime get endOfMonth {
-    return DateTime(year, month + 1, 0);
-  }
-
-  /// Gets the start of the year
-  DateTime get startOfYear {
-    return DateTime(year, 1, 1);
-  }
-
-  /// Gets the end of the year
-  DateTime get endOfYear {
-    return DateTime(year, 12, 31);
-  }
-
-  /// Checks if this date is today
-  bool get isToday {
-    final now = DateTime.now();
-    return year == now.year && month == now.month && day == now.day;
-  }
-
-  /// Checks if this date is yesterday
-  bool get isYesterday {
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    return year == yesterday.year && 
-           month == yesterday.month && 
-           day == yesterday.day;
-  }
-
-  /// Checks if this date is in this week
-  bool get isThisWeek {
-    final now = DateTime.now();
-    final startOfWeek = DatePickerExtensions(now).startOfWeek;
-    final endOfWeek = DatePickerExtensions(now).endOfWeek;
-    return isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-           isBefore(endOfWeek.add(const Duration(days: 1)));
-  }
-
-  /// Checks if this date is in this month
-  bool get isThisMonth {
-    final now = DateTime.now();
-    return year == now.year && month == now.month;
-  }
-
-  /// Gets a human-readable relative description
-  String get relativeDescription {
-    if (isToday) return 'Today';
-    if (isYesterday) return 'Yesterday';
-    
-    final now = DateTime.now();
-    final difference = now.difference(this).inDays;
-    
-    if (difference == -1) return 'Tomorrow';
-    if (difference < 7 && difference > 0) return '$difference days ago';
-    if (difference < 0 && difference > -7) return 'In ${-difference} days';
-    if (isThisWeek) return 'This week';
-    if (isThisMonth) return 'This month';
-    
-    return DateFormat.yMMMd().format(this);
-  }
 }

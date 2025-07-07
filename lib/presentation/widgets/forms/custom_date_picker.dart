@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../core/constants/dimensions.dart';
@@ -44,6 +45,46 @@ class CustomDatePicker extends StatefulWidget {
 }
 
 class _CustomDatePickerState extends State<CustomDatePicker> {
+  final TextEditingController _controller = TextEditingController();
+  final DateRangePickerController _datePickerController =
+      DateRangePickerController();
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _updateController();
+    _datePickerController.selectedDate = widget.selectedDate;
+  }
+
+  @override
+  void didUpdateWidget(CustomDatePicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedDate != oldWidget.selectedDate) {
+      _updateController();
+      _datePickerController.selectedDate = widget.selectedDate;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _datePickerController.dispose();
+    _overlayEntry?.remove();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _updateController() {
+    if (widget.selectedDate != null) {
+      _controller.text = DateFormat.yMMMd().format(widget.selectedDate!);
+    } else {
+      _controller.clear();
+    }
+  }
+
   String? _getValidator(DateTime? value) {
     if (widget.validator != null) {
       return widget.validator!(value);
@@ -60,401 +101,289 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
     return null;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+  void _showDatePicker() {
+    if (!widget.enabled) return;
 
-    // If using form field mode
-    if (widget.labelText != null ||
-        widget.description != null ||
-        widget.required) {
-      return ShadDatePickerFormField(
-        label: widget.labelText != null
-            ? Row(
-                children: [
-                  Text(widget.labelText!),
-                  if (widget.required)
-                    Text(
-                      ' *',
-                      style: TextStyle(
-                        color: theme.colorScheme.destructive,
-                      ),
-                    ),
-                ],
-              )
-            : null,
-        description:
-            widget.description != null ? Text(widget.description!) : null,
-        initialValue: widget.selectedDate,
-        onChanged: widget.enabled
-            ? (date) => widget.onChanged?.call(date)
-            : null,
-        validator: _getValidator,
-        fromMonth: widget.fromMonth,
-        toMonth: widget.toMonth,
-      );
-    }
-
-    // Basic date picker without form field
-    return Container(
-      padding: widget.padding,
-      constraints: BoxConstraints(
-        minWidth: widget.minWidth ?? 0,
-        maxWidth: widget.maxWidth ?? double.infinity,
-      ),
-      child: ShadDatePicker(
-        selected: widget.selectedDate,
-        onChanged: widget.enabled
-            ? (date) => widget.onChanged?.call(date)
-            : null,
-        fromMonth: widget.fromMonth,
-        toMonth: widget.toMonth,
-      ),
-    );
-  }
-}
-
-// Date range picker
-class CustomDateRangePicker extends StatefulWidget {
-  final String? labelText;
-  final String? description;
-  final ShadDateTimeRange? selectedRange;
-  final ValueChanged<ShadDateTimeRange?>? onChanged;
-  final DateTime? fromMonth;
-  final DateTime? toMonth;
-  final bool enabled;
-  final bool required;
-  final String? Function(ShadDateTimeRange?)? validator;
-  final AutovalidateMode? autovalidateMode;
-  final EdgeInsetsGeometry? padding;
-  final double? minWidth;
-  final double? maxWidth;
-
-  const CustomDateRangePicker({
-    super.key,
-    this.labelText,
-    this.description,
-    this.selectedRange,
-    this.onChanged,
-    this.fromMonth,
-    this.toMonth,
-    this.enabled = true,
-    this.required = false,
-    this.validator,
-    this.autovalidateMode,
-    this.padding,
-    this.minWidth,
-    this.maxWidth,
-  });
-
-  @override
-  State<CustomDateRangePicker> createState() => _CustomDateRangePickerState();
-}
-
-class _CustomDateRangePickerState extends State<CustomDateRangePicker> {
-  String? _getValidator(ShadDateTimeRange? value) {
-    if (widget.validator != null) {
-      return widget.validator!(value);
-    }
-
-    if (widget.required && value == null) {
-      return 'validation.required'.tr();
-    }
-
-    return null;
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+    _focusNode.requestFocus();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-
-    // If using form field mode
-    if (widget.labelText != null ||
-        widget.description != null ||
-        widget.required) {
-      return ShadDateRangePickerFormField(
-        label: widget.labelText != null
-            ? Row(
-                children: [
-                  Text(widget.labelText!),
-                  if (widget.required)
-                    Text(
-                      ' *',
-                      style: TextStyle(
-                        color: theme.colorScheme.destructive,
-                      ),
-                    ),
-                ],
-              )
-            : null,
-        description:
-            widget.description != null ? Text(widget.description!) : null,
-        initialValue: widget.selectedRange,
-        onChanged: widget.enabled
-            ? (date) => widget.onChanged?.call(date)
-            : null,
-        validator: _getValidator,
-        fromMonth: widget.fromMonth,
-        toMonth: widget.toMonth,
-      );
-    }
-
-    // Basic date range picker without form field
-    return Container(
-      padding: widget.padding,
-      constraints: BoxConstraints(
-        minWidth: widget.minWidth ?? 0,
-        maxWidth: widget.maxWidth ?? double.infinity,
-      ),
-      child: ShadDatePicker.range(
-        selected: widget.selectedRange,
-        onChanged: widget.enabled
-            ? (value) => widget.onChanged
-            : null,
-        fromMonth: widget.fromMonth,
-        toMonth: widget.toMonth,
-      ),
-    );
-  }
-}
-
-// Date picker with presets
-class PresetDatePicker extends StatefulWidget {
-  final String? labelText;
-  final String? description;
-  final DateTime? selectedDate;
-  final ValueChanged<DateTime?>? onChanged;
-  final Map<int, String> presets;
-  final DateTime? fromMonth;
-  final DateTime? toMonth;
-  final bool enabled;
-  final bool required;
-  final String? Function(DateTime?)? validator;
-  final double? minWidth;
-  final double? maxWidth;
-
-  const PresetDatePicker({
-    super.key,
-    this.labelText,
-    this.description,
-    this.selectedDate,
-    this.onChanged,
-    this.presets = const {},
-    this.fromMonth,
-    this.toMonth,
-    this.enabled = true,
-    this.required = false,
-    this.validator,
-    this.minWidth,
-    this.maxWidth,
-  });
-
-  @override
-  State<PresetDatePicker> createState() => _PresetDatePickerState();
-}
-
-class _PresetDatePickerState extends State<PresetDatePicker> {
-  final groupId = UniqueKey();
-  final today = DateTimeExtension(DateTime.now()).startOfDay;
-
-  void _onPresetChanged(int? days) {
-    if (days == null || !widget.enabled) return;
-
-    final selectedDate = today.add(Duration(days: days));
-    widget.onChanged?.call(selectedDate);
+  void _hideDatePicker() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _focusNode.unfocus();
   }
 
-  String? _getValidator(DateTime? value) {
-    if (widget.validator != null) {
-      return widget.validator!(value);
-    }
+  OverlayEntry _createOverlayEntry() {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    var size = renderBox.size;
+    var offset = renderBox.localToGlobal(Offset.zero);
 
-    if (widget.required && value == null) {
-      return 'validation.required'.tr();
-    }
-
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (widget.labelText != null) ...[
-          Row(
-            children: [
-              Text(
-                widget.labelText!,
-                style: theme.textTheme.h4,
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        left: offset.dx,
+        top: offset.dy + size.height + 5,
+        width: size.width.clamp(300.0, 400.0),
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: ShadTheme.of(context).colorScheme.border,
+                ),
+                color: ShadTheme.of(context).colorScheme.background,
               ),
-              if (widget.required)
-                Text(
-                  ' *',
-                  style: theme.textTheme.h4.copyWith(
-                    color: theme.colorScheme.destructive,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Quick date options if provided
+                  if (widget.presets != null && widget.presets!.isNotEmpty)
+                    _buildQuickDateOptions(),
+
+                  // Syncfusion Date Picker
+                  SfDateRangePicker(
+                    controller: _datePickerController,
+                    view: DateRangePickerView.month,
+                    selectionMode: DateRangePickerSelectionMode.single,
+                    showNavigationArrow: true,
+                    allowViewNavigation: true,
+                    enablePastDates: true,
+                    minDate: widget.fromMonth,
+                    maxDate: widget.toMonth,
+                    initialSelectedDate: widget.selectedDate,
+                    onSelectionChanged: _onSelectionChanged,
+                    monthViewSettings: const DateRangePickerMonthViewSettings(
+                      enableSwipeSelection: false,
+                    ),
+                    monthCellStyle: DateRangePickerMonthCellStyle(
+                      textStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.foreground,
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    selectionTextStyle: TextStyle(
+                      color:
+                          ShadTheme.of(context).colorScheme.primaryForeground,
+                    ),
+                    rangeTextStyle: TextStyle(
+                      color: ShadTheme.of(context).colorScheme.foreground,
+                    ),
+                    selectionColor: ShadTheme.of(context).colorScheme.primary,
+                    startRangeSelectionColor:
+                        ShadTheme.of(context).colorScheme.primary,
+                    endRangeSelectionColor:
+                        ShadTheme.of(context).colorScheme.primary,
+                    rangeSelectionColor: ShadTheme.of(context)
+                        .colorScheme
+                        .primary
+                        .withOpacity(0.3),
+                    todayHighlightColor:
+                        ShadTheme.of(context).colorScheme.primary,
+                    headerStyle: DateRangePickerHeaderStyle(
+                      textStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.foreground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    yearCellStyle: DateRangePickerYearCellStyle(
+                      textStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.foreground,
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: ShadTheme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.spacingS),
-        ],
-        if (widget.description != null) ...[
-          Text(
-            widget.description!,
-            style: theme.textTheme.muted,
-          ),
-          const SizedBox(height: AppDimensions.spacingM),
-        ],
-        Container(
-          constraints: BoxConstraints(
-            minWidth: widget.minWidth ?? 0,
-            maxWidth: widget.maxWidth ?? double.infinity,
-          ),
-          child: ShadDatePicker(
-            groupId: groupId,
-            selected: widget.selectedDate,
-            onChanged: widget.enabled ? widget.onChanged : null,
-            fromMonth: widget.fromMonth,
-            toMonth: widget.toMonth,
-            header: widget.presets.isNotEmpty
-                ? Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: ShadSelect<int>(
-                      groupId: groupId,
-                      minWidth: 276,
-                      placeholder: const Text('Select preset'),
-                      options: widget.presets.entries
-                          .map((e) => ShadOption(
-                                value: e.key,
-                                child: Text(e.value),
-                              ))
-                          .toList(),
-                      selectedOptionBuilder: (context, value) {
-                        return Text(widget.presets[value]!);
-                      },
-                      onChanged: _onPresetChanged,
+
+                  // Action buttons
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ShadButton.outline(
+                          onPressed: () {
+                            _hideDatePicker();
+                          },
+                          child: Text('common.cancel'.tr()),
+                        ),
+                        const SizedBox(width: 8),
+                        ShadButton(
+                          onPressed: () {
+                            _hideDatePicker();
+                          },
+                          child: Text('common.done'.tr()),
+                        ),
+                      ],
                     ),
-                  )
-                : null,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
-}
 
-// Quick date picker with preset buttons
-class QuickDatePicker extends StatelessWidget {
-  final String? labelText;
-  final DateTime? selectedDate;
-  final ValueChanged<DateTime?>? onDateSelected;
-  final List<QuickDateOption> quickOptions;
-  final bool showCustomOption;
-  final bool enabled;
+  Widget _buildQuickDateOptions() {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: ShadTheme.of(context).colorScheme.border,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'common.quickSelect'.tr(),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: ShadTheme.of(context).colorScheme.foreground,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            children: widget.presets!
+                .map((option) => ShadButton.outline(
+                      size: ShadButtonSize.sm,
+                      onPressed: () {
+                        widget.onChanged?.call(option.date);
+                        _hideDatePicker();
+                      },
+                      child: Text(option.label),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
 
-  const QuickDatePicker({
-    super.key,
-    this.labelText,
-    this.selectedDate,
-    this.onDateSelected,
-    this.quickOptions = const [],
-    this.showCustomOption = true,
-    this.enabled = true,
-  });
+  void _onSelectionChanged(DateRangePickerSelectionChangedArgs args) {
+    if (args.value is DateTime) {
+      final selectedDate = args.value as DateTime;
+      widget.onChanged?.call(selectedDate);
+    }
+  }
+
+  void _clearDate() {
+    widget.onChanged?.call(null);
+    _hideDatePicker();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
-    final defaultQuickOptions = _getDefaultQuickOptions();
-    final allOptions = [...quickOptions, ...defaultQuickOptions];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (labelText != null) ...[
-          Text(
-            labelText!,
-            style: theme.textTheme.h4,
+    // If using form field mode
+    if (widget.labelText != null ||
+        widget.description != null ||
+        widget.required) {
+      return CompositedTransformTarget(
+        link: _layerLink,
+        child: ShadInputFormField(
+          controller: _controller,
+          focusNode: _focusNode,
+          label: widget.labelText != null
+              ? Row(
+                  children: [
+                    Text(widget.labelText!),
+                    if (widget.required)
+                      Text(
+                        ' *',
+                        style: TextStyle(
+                          color: theme.colorScheme.destructive,
+                        ),
+                      ),
+                  ],
+                )
+              : null,
+          placeholder: Text('forms.selectDate'.tr()),
+          description:
+              widget.description != null ? Text(widget.description!) : null,
+          readOnly: true,
+          enabled: widget.enabled,
+          leading: const Padding(
+            padding: EdgeInsets.all(AppDimensions.paddingS),
+            child: Icon(
+              Icons.calendar_today,
+              size: AppDimensions.iconS,
+            ),
           ),
-          const SizedBox(height: AppDimensions.spacingS),
-        ],
-        Wrap(
-          spacing: AppDimensions.spacingS,
-          runSpacing: AppDimensions.spacingS,
-          children: [
-            ...allOptions.map((option) => ShadButton.raw(
-                  onPressed:
-                      enabled ? () => onDateSelected?.call(option.date) : null,
-                  variant: _isSelected(option.date)
-                      ? ShadButtonVariant.primary
-                      : ShadButtonVariant.outline,
-                  child: Text(option.label),
-                )),
-            if (showCustomOption)
-              ShadButton.outline(
-                onPressed:
-                    enabled ? () => _showCustomDatePicker(context) : null,
-                leading: const Icon(
-                  Icons.calendar_today,
-                  size: AppDimensions.iconXs,
-                ),
-                child: Text('common.custom'.tr()),
-              ),
-          ],
+          trailing: widget.selectedDate != null
+              ? ShadButton(
+                  width: 24,
+                  height: 24,
+                  padding: EdgeInsets.zero,
+                  onPressed: widget.enabled ? _clearDate : null,
+                  child: const Icon(
+                    Icons.clear,
+                    size: AppDimensions.iconS,
+                  ),
+                )
+              : null,
+          onPressed: _showDatePicker,
+          validator: (value) => _getValidator(widget.selectedDate),
+          autovalidateMode: widget.autovalidateMode,
         ),
-      ],
-    );
-  }
-
-  bool _isSelected(DateTime? date) {
-    if (selectedDate == null || date == null) return false;
-    return DateUtils.isSameDay(selectedDate, date);
-  }
-
-  List<QuickDateOption> _getDefaultQuickOptions() {
-    final now = DateTime.now();
-    return [
-      QuickDateOption(
-        label: 'common.today'.tr(),
-        date: now,
-      ),
-      QuickDateOption(
-        label: 'common.yesterday'.tr(),
-        date: now.subtract(const Duration(days: 1)),
-      ),
-      QuickDateOption(
-        label: 'common.thisWeek'.tr(),
-        date: now.subtract(Duration(days: now.weekday - 1)),
-      ),
-      QuickDateOption(
-        label: 'common.lastWeek'.tr(),
-        date: now.subtract(Duration(days: now.weekday + 6)),
-      ),
-      QuickDateOption(
-        label: 'common.thisMonth'.tr(),
-        date: DateTime(now.year, now.month, 1),
-      ),
-      QuickDateOption(
-        label: 'common.lastMonth'.tr(),
-        date: DateTime(now.year, now.month - 1, 1),
-      ),
-    ];
-  }
-
-  Future<void> _showCustomDatePicker(BuildContext context) async {
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: this.selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-    );
-
-    if (selectedDate != null) {
-      onDateSelected?.call(selectedDate);
+      );
     }
+
+    // Basic input field
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Container(
+        padding: widget.padding,
+        constraints: BoxConstraints(
+          minWidth: widget.minWidth ?? 0,
+          maxWidth: widget.maxWidth ?? double.infinity,
+        ),
+        child: ShadInput(
+          controller: _controller,
+          focusNode: _focusNode,
+          placeholder: Text('forms.selectDate'.tr()),
+          readOnly: true,
+          enabled: widget.enabled,
+          leading: const Padding(
+            padding: EdgeInsets.all(AppDimensions.paddingS),
+            child: Icon(
+              Icons.calendar_today,
+              size: AppDimensions.iconS,
+            ),
+          ),
+          trailing: widget.selectedDate != null
+              ? ShadButton(
+                  width: 24,
+                  height: 24,
+                  padding: EdgeInsets.zero,
+                  onPressed: widget.enabled ? _clearDate : null,
+                  child: Icon(
+                    Icons.clear,
+                    size: AppDimensions.iconS,
+                  ),
+                )
+              : null,
+          onPressed: _showDatePicker,
+        ),
+      ),
+    );
   }
 }
 
@@ -467,191 +396,4 @@ class QuickDateOption {
     required this.label,
     required this.date,
   });
-}
-
-// Date input field that opens date picker
-class DateInputField extends StatefulWidget {
-  final String? labelText;
-  final String? placeholder;
-  final String? description;
-  final DateTime? selectedDate;
-  final ValueChanged<DateTime?>? onChanged;
-  final bool enabled;
-  final bool required;
-  final String? Function(DateTime?)? validator;
-  final DateFormat? dateFormat;
-  final double? minWidth;
-  final double? maxWidth;
-
-  const DateInputField({
-    super.key,
-    this.labelText,
-    this.placeholder,
-    this.description,
-    this.selectedDate,
-    this.onChanged,
-    this.enabled = true,
-    this.required = false,
-    this.validator,
-    this.dateFormat,
-    this.minWidth,
-    this.maxWidth,
-  });
-
-  @override
-  State<DateInputField> createState() => _DateInputFieldState();
-}
-
-class _DateInputFieldState extends State<DateInputField> {
-  late TextEditingController _controller;
-  late DateFormat _dateFormatter;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-    _dateFormatter = widget.dateFormat ?? DateFormat('MMM dd, yyyy');
-
-    if (widget.selectedDate != null) {
-      _controller.text = _dateFormatter.format(widget.selectedDate!);
-    }
-  }
-
-  @override
-  void didUpdateWidget(DateInputField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.selectedDate != oldWidget.selectedDate) {
-      if (widget.selectedDate != null) {
-        _controller.text = _dateFormatter.format(widget.selectedDate!);
-      } else {
-        _controller.clear();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _selectDate() async {
-    if (!widget.enabled) return;
-
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: widget.selectedDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-    );
-
-    if (selectedDate != null) {
-      _controller.text = _dateFormatter.format(selectedDate);
-      widget.onChanged?.call(selectedDate);
-    }
-  }
-
-  void _clearDate() {
-    _controller.clear();
-    widget.onChanged?.call(null);
-  }
-
-  String? _getValidator(String? value) {
-    if (widget.validator != null) {
-      return widget.validator!(widget.selectedDate);
-    }
-
-    if (widget.required && (value == null || value.trim().isEmpty)) {
-      return 'validation.required'.tr();
-    }
-
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-
-    // If using form field mode
-    if (widget.labelText != null ||
-        widget.description != null ||
-        widget.required) {
-      return ShadInputFormField(
-        controller: _controller,
-        label: widget.labelText != null
-            ? Row(
-                children: [
-                  Text(widget.labelText!),
-                  if (widget.required)
-                    Text(
-                      ' *',
-                      style: TextStyle(
-                        color: theme.colorScheme.destructive,
-                      ),
-                    ),
-                ],
-              )
-            : null,
-        placeholder: Text(widget.placeholder ?? 'forms.selectDate'.tr()),
-        description:
-            widget.description != null ? Text(widget.description!) : null,
-        readOnly: true,
-        enabled: widget.enabled,
-        leading: const Padding(
-          padding: EdgeInsets.all(AppDimensions.paddingS),
-          child: Icon(
-            Icons.calendar_today,
-            size: AppDimensions.iconS,
-          ),
-        ),
-        trailing: widget.selectedDate != null
-            ? ShadButton(
-                width: 24,
-                height: 24,
-                padding: EdgeInsets.zero,
-                child: const Icon(
-                  Icons.clear,
-                  size: AppDimensions.iconS,
-                ),
-                onPressed: widget.enabled ? _clearDate : null,
-              )
-            : null,
-        onPressed: _selectDate,
-        validator: _getValidator,
-      );
-    }
-
-    // Basic input field
-    return ShadInput(
-      controller: _controller,
-      placeholder: Text(widget.placeholder ?? 'forms.selectDate'.tr()),
-      readOnly: true,
-      enabled: widget.enabled,
-      leading: const Padding(
-        padding: EdgeInsets.all(AppDimensions.paddingS),
-        child: Icon(
-          Icons.calendar_today,
-          size: AppDimensions.iconS,
-        ),
-      ),
-      trailing: widget.selectedDate != null
-          ? ShadButton(
-              width: 24,
-              height: 24,
-              padding: EdgeInsets.zero,
-              child: const Icon(
-                Icons.clear,
-                size: AppDimensions.iconS,
-              ),
-              onPressed: widget.enabled ? _clearDate : null,
-            )
-          : null,
-      onPressed: _selectDate,
-    );
-  }
-}
-
-// Extension to get start of day
-extension DateTimeExtension on DateTime {
-  DateTime get startOfDay => DateTime(year, month, day);
 }

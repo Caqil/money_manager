@@ -20,7 +20,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-
 typedef TransactionFormData = ({
   double amount,
   String categoryId,
@@ -240,7 +239,7 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
             label: 'transactions.receiptImage'.tr(),
             enabled: widget.enabled && !widget.isLoading,
           ),
-           SizedBox(height: AppDimensions.spacingXl),
+          SizedBox(height: AppDimensions.spacingXl),
 
           // Action Buttons
           _buildActionButtons(),
