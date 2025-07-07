@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:money_manager/presentation/screens/auth/login_screen.dart';
 
 // Import your pages here (you'll need to create these)
 // import '../../presentation/pages/auth/splash_page.dart';
@@ -26,7 +27,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.splash,
           name: 'splash',
-          builder: (context, state) => const SplashPage(),
+          builder: (context, state) => const SplashScreen(),
         ),
         GoRoute(
           path: RouteNames.onboarding,
@@ -36,7 +37,7 @@ class AppRouter {
         GoRoute(
           path: RouteNames.login,
           name: 'login',
-          builder: (context, state) => const LoginPage(),
+          builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
           path: RouteNames.register,

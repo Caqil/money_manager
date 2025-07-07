@@ -7,6 +7,7 @@ import 'dart:math';
 import '../../core/constants/app_constants.dart';
 import '../../core/errors/exceptions.dart';
 import '../../core/utils/validation_helper.dart';
+import 'auth_service.dart';
 
 class AuthService {
   static AuthService? _instance;
@@ -426,32 +427,4 @@ enum AuthStatus {
   pinEnabled,
   biometricEnabled,
   bothEnabled,
-}
-
-// Biometric info class
-class BiometricInfo {
-  final bool isAvailable;
-  final bool isEnabled;
-  final List<BiometricType> availableTypes;
-  final bool hasFingerprint;
-  final bool hasFaceID;
-  final bool hasIris;
-
-  const BiometricInfo({
-    required this.isAvailable,
-    required this.isEnabled,
-    required this.availableTypes,
-    required this.hasFingerprint,
-    required this.hasFaceID,
-    required this.hasIris,
-  });
-
-  String get primaryBiometricName {
-    if (hasFaceID) return 'Face ID';
-    if (hasFingerprint) return 'Fingerprint';
-    if (hasIris) return 'Iris';
-    return 'Biometric';
-  }
-
-  bool get hasAnyBiometric => hasFingerprint || hasFaceID || hasIris;
 }

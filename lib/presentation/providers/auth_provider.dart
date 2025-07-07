@@ -24,7 +24,7 @@ final biometricAvailabilityProvider = FutureProvider<BiometricInfo>(
 
     return BiometricInfo(
       isAvailable: isAvailable,
-      availableTypes: availableTypes,
+      availableTypes: availableTypes, isEnabled: false, hasFingerprint: false, hasFaceID: false, hasIris: false,
     );
   },
 );
@@ -276,19 +276,4 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
-}
-
-// Helper classes
-class BiometricInfo {
-  final bool isAvailable;
-  final List<BiometricType> availableTypes;
-
-  const BiometricInfo({
-    required this.isAvailable,
-    required this.availableTypes,
-  });
-
-  bool get hasFaceID => availableTypes.contains(BiometricType.face);
-  bool get hasFingerprint => availableTypes.contains(BiometricType.fingerprint);
-  bool get hasIris => availableTypes.contains(BiometricType.iris);
 }
