@@ -17,7 +17,8 @@ import 'data/models/badge.dart';
 import 'data/services/hive_service.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/auth_service.dart';
-import 'data/services/settings_service.dart'; // ADD: Import SettingsService
+import 'data/services/settings_service.dart';
+import 'data/services/encryption_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,15 @@ void main() async {
   // CRITICAL: Initialize both AuthService AND SettingsService before running the app
   await AuthService.init();
   await SettingsService.init();
+
+  // Initialize EncryptionService
+  try {
+    await EncryptionService.init();
+    print('✅ EncryptionService initialized successfully');
+  } catch (e) {
+    print('⚠️ EncryptionService initialization failed: $e');
+    // Continue without encryption for now
+  }
 
   runApp(
     ProviderScope(

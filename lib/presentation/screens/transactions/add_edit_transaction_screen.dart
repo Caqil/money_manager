@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -38,8 +40,15 @@ class _AddEditTransactionScreenState
     extends ConsumerState<AddEditTransactionScreen> {
   bool _isLoading = false;
   final _uuid = const Uuid();
+  Timer? _submitDebounceTimer;
 
   bool get isEditing => widget.transactionId != null;
+
+  @override
+  void dispose() {
+    _submitDebounceTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -269,80 +278,131 @@ class _AddEditTransactionScreenState
   }
 
   Future<void> _handleSubmit(TransactionFormData formData) async {
+    // Prevent multiple rapid submissions
     if (_isLoading) return;
 
+    print('🔄 Transaction submission started');
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      final notifier = ref.read(transactionListProvider.notifier);
+    // Use scheduleMicrotask to ensure UI updates immediately
+    scheduleMicrotask(() async {
+      final stopwatch = Stopwatch()..start();
 
-      if (isEditing) {
-        // Update existing transaction
-        final updatedTransaction = widget.transactionId != null
-            ? ref
-                .read(transactionProvider(widget.transactionId!))
-                .value
-                ?.copyWith(
-                  amount: formData.amount,
-                  categoryId: formData.categoryId,
-                  date: formData.date,
-                  notes: formData.notes,
-                  type: formData.type,
-                  imagePath: formData.imagePath,
-                  accountId: formData.accountId,
-                  currency: formData.currency,
-                  transferToAccountId: formData.transferToAccountId,
-                  metadata: formData.metadata,
-                  updatedAt: DateTime.now(),
-                )
-            : null;
+      try {
+        print('📝 Creating transaction object...');
+        final notifier = ref.read(transactionListProvider.notifier);
 
-        if (updatedTransaction != null) {
+        if (isEditing && widget.transactionId != null) {
+          // Get the current transaction properly from the AsyncValue
+          final transactionAsync =
+              ref.read(transactionProvider(widget.transactionId!));
+
+          Transaction? currentTransaction;
+          transactionAsync.when(
+            data: (transaction) => currentTransaction = transaction,
+            loading: () => currentTransaction = null,
+            error: (_, __) => currentTransaction = null,
+          );
+
+          if (currentTransaction == null) {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+            _showError('transactions.transactionNotFound'.tr());
+            return;
+          }
+
+          // Update existing transaction
+          final updatedTransaction = currentTransaction!.copyWith(
+            amount: formData.amount,
+            categoryId: formData.categoryId,
+            date: formData.date,
+            notes: formData.notes,
+            type: formData.type,
+            imagePath: formData.imagePath,
+            accountId: formData.accountId,
+            currency: formData.currency,
+            transferToAccountId: formData.transferToAccountId,
+            metadata: formData.metadata,
+            updatedAt: DateTime.now(),
+          );
+
+          print('💾 Updating transaction in database...');
+          // Run database operation in background using compute if needed
           final success = await notifier.updateTransaction(updatedTransaction);
-          if (success) {
-            _showSuccessAndNavigateBack('transactions.transactionUpdated'.tr());
-          } else {
-            _showError('transactions.errorUpdatingTransaction'.tr());
+          print(
+              '✅ Transaction update completed in ${stopwatch.elapsedMilliseconds}ms');
+
+          if (mounted) {
+            if (success) {
+              _showSuccessAndNavigateBack(
+                  'transactions.transactionUpdated'.tr());
+            } else {
+              setState(() {
+                _isLoading = false;
+              });
+              _showError('transactions.errorUpdatingTransaction'.tr());
+            }
+          }
+        } else {
+          // Create new transaction
+          final newTransaction = Transaction(
+            id: _uuid.v4(),
+            amount: formData.amount,
+            categoryId: formData.categoryId,
+            date: formData.date,
+            notes: formData.notes,
+            type: formData.type,
+            imagePath: formData.imagePath,
+            accountId: formData.accountId,
+            currency: formData.currency,
+            transferToAccountId: formData.transferToAccountId,
+            metadata: formData.metadata,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          print('💾 Adding transaction to database...');
+          // Run database operation in background
+          final transactionId = await notifier.addTransaction(newTransaction);
+          print(
+              '✅ Transaction add completed in ${stopwatch.elapsedMilliseconds}ms');
+          print('📋 Returned transaction ID: $transactionId');
+
+          if (mounted) {
+            if (transactionId != null && transactionId.isNotEmpty) {
+              print('🎉 Transaction creation successful, navigating back');
+              _showSuccessAndNavigateBack(
+                  'transactions.transactionCreated'.tr());
+            } else {
+              print('❌ Transaction creation failed - empty or null ID');
+              setState(() {
+                _isLoading = false;
+              });
+              _showError('transactions.errorCreatingTransaction'.tr() +
+                  ' (ID: $transactionId)');
+            }
           }
         }
-      } else {
-        // Create new transaction
-        final newTransaction = Transaction(
-          id: _uuid.v4(),
-          amount: formData.amount,
-          categoryId: formData.categoryId,
-          date: formData.date,
-          notes: formData.notes,
-          type: formData.type,
-          imagePath: formData.imagePath,
-          accountId: formData.accountId,
-          currency: formData.currency,
-          transferToAccountId: formData.transferToAccountId,
-          metadata: formData.metadata,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-
-        final transactionId = await notifier.addTransaction(newTransaction);
-        if (transactionId != null) {
-          _showSuccessAndNavigateBack('transactions.transactionCreated'.tr());
-        } else {
-          _showError('transactions.errorCreatingTransaction'.tr());
+      } catch (e) {
+        print('❌ Transaction submission error: $e');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          _showError(isEditing
+              ? 'transactions.errorUpdatingTransaction'.tr()
+              : 'transactions.errorCreatingTransaction'.tr());
         }
+      } finally {
+        stopwatch.stop();
+        print(
+            '🏁 Transaction submission finished in ${stopwatch.elapsedMilliseconds}ms');
       }
-    } catch (e) {
-      _showError(isEditing
-          ? 'transactions.errorUpdatingTransaction'.tr()
-          : 'transactions.errorCreatingTransaction'.tr());
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
+    });
   }
 
   void _handleCancel() {
@@ -364,15 +424,22 @@ class _AddEditTransactionScreenState
   void _shareTransaction(Transaction transaction) {
     // Implement transaction sharing functionality
     // This could generate a text summary and use the share_plus package
+    final typeNames = {
+      TransactionType.income: 'transactions.income'.tr(),
+      TransactionType.expense: 'transactions.expense'.tr(),
+      TransactionType.transfer: 'transactions.transfer'.tr(),
+    };
+
     final shareText = '''
-${_getTypeDisplayName(transaction.type)}: ${transaction.amount} ${transaction.currency}
+${typeNames[transaction.type]}: ${transaction.amount} ${transaction.currency}
 Date: ${DateFormat.yMMMd().format(transaction.date)}
 ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
     '''
         .trim();
 
-    // Share functionality would go here
+    // TODO: Implement actual share functionality with share_plus package
     // Share.share(shareText);
+    _showError('Feature coming soon: $shareText');
   }
 
   void _showDeleteConfirmation(Transaction transaction) {
@@ -428,15 +495,20 @@ ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
   void _showSuccessAndNavigateBack(String message) {
     if (!mounted) return;
 
-    ShadSonner.of(context).show(
-      ShadToast.raw(
-        variant: ShadToastVariant.primary,
-        description: Text(message),
-        backgroundColor: AppColors.success,
-      ),
-    );
+    // Schedule the navigation to happen after the current frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ShadSonner.of(context).show(
+          ShadToast.raw(
+            variant: ShadToastVariant.primary,
+            description: Text(message),
+            backgroundColor: AppColors.success,
+          ),
+        );
 
-    context.pop();
+        context.pop();
+      }
+    });
   }
 
   void _showError(String message) {
@@ -449,16 +521,5 @@ ${transaction.notes != null ? 'Notes: ${transaction.notes}' : ''}
         backgroundColor: AppColors.error,
       ),
     );
-  }
-
-  String _getTypeDisplayName(TransactionType type) {
-    switch (type) {
-      case TransactionType.income:
-        return 'transactions.income'.tr();
-      case TransactionType.expense:
-        return 'transactions.expense'.tr();
-      case TransactionType.transfer:
-        return 'transactions.transfer'.tr();
-    }
   }
 }

@@ -62,7 +62,7 @@ class QuickAddMenu extends StatelessWidget {
               ),
               const SizedBox(height: AppDimensions.spacingL),
               Text(
-                'quickActions.addExpense'.tr(),
+                'quickActions.title'.tr(),
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -113,7 +113,7 @@ class QuickAddMenu extends StatelessWidget {
                   ),
                   _QuickAddItem(
                     icon: Icons.calculate_outlined,
-                    label: 'Calculator',
+                    label: 'quickActions.calculator'.tr(),
                     color: AppColors.warning,
                     onTap: () {
                       Navigator.pop(context);
@@ -122,7 +122,7 @@ class QuickAddMenu extends StatelessWidget {
                   ),
                   _QuickAddItem(
                     icon: Icons.currency_exchange_rounded,
-                    label: 'Currency',
+                    label: 'quickActions.currencyConverter'.tr(),
                     color: theme.colorScheme.primary,
                     onTap: () {
                       Navigator.pop(context);

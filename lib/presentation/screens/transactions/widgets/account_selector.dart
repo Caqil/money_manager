@@ -193,10 +193,18 @@ class _AccountSelectorState extends ConsumerState<AccountSelector> {
               final account = accountId != null
                   ? filteredAccounts.firstWhere((acc) => acc.id == accountId)
                   : null;
-              setState(() {
-                _selectedAccount = account;
-              });
+
+              // Call callback immediately
               widget.onAccountSelected(account);
+
+              // Defer setState to avoid build conflicts
+              Future.microtask(() {
+                if (mounted) {
+                  setState(() {
+                    _selectedAccount = account;
+                  });
+                }
+              });
             }
           : null,
       initialValue: widget.selectedAccountId,

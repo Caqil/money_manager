@@ -83,11 +83,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            // Welcome Header
-            SliverToBoxAdapter(
-              child: _buildWelcomeHeader(),
-            ),
-
             // Main Content
             SliverPadding(
               padding: const EdgeInsets.all(AppDimensions.spacingM),
@@ -144,7 +139,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return CustomAppBar(
-      title: 'dashboard.welcome'.tr(),
+      centerTitle: false,
+      title: 'app.name'.tr(),
       showBackButton: false,
       actions: [
         IconButton(
@@ -158,77 +154,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           tooltip: 'settings.title'.tr(),
         ),
       ],
-    );
-  }
-
-  Widget _buildWelcomeHeader() {
-    final theme = ShadTheme.of(context);
-    final currentHour = DateTime.now().hour;
-
-    String greeting;
-    if (currentHour < 12) {
-      greeting = 'Good Morning';
-    } else if (currentHour < 17) {
-      greeting = 'Good Afternoon';
-    } else {
-      greeting = 'Good Evening';
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.secondary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.spacingM),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        greeting,
-                        style: theme.textTheme.large.copyWith(
-                          color: theme.colorScheme.mutedForeground,
-                        ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXs),
-                      Text(
-                        'dashboard.welcome'.tr(),
-                        style: theme.textTheme.h3.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spacingS),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-                  ),
-                  child: Icon(
-                    Icons.account_balance_wallet,
-                    color: theme.colorScheme.primary,
-                    size: AppDimensions.iconL,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 

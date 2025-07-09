@@ -31,7 +31,8 @@ class RouteNames {
   static const String addIncome = '/transactions/add/income';
   static const String addExpense = '/transactions/add/expense';
   static const String addTransfer = '/transactions/add/transfer';
-  static const String duplicateTransaction = '/transactions/:transactionId/duplicate';
+  static const String duplicateTransaction =
+      '/transactions/:transactionId/duplicate';
   static const String receiptView = '/transactions/:transactionId/receipt';
   static const String voiceInput = '/transactions/voice-input';
 
@@ -93,26 +94,17 @@ class RouteNames {
   static const String privacyPolicy = '/settings/privacy';
   static const String termsOfService = '/settings/terms';
 
+  // Quick Actions
+  static const String scanner = '/scanner';
+  static const String calculator = '/calculator';
+  static const String currencyConverter = '/currency-converter';
+
   // Backup and data routes
   static const String backup = '/backup';
   static const String backupRestore = '/backup/restore';
   static const String backupHistory = '/backup/history';
-  static const String dataExport = '/backup/export';
   static const String dataImport = '/backup/import';
 
-  // Help and support routes
+  // Help and support
   static const String help = '/help';
-  static const String helpTopic = '/help/:topicId';
-  static const String contact = '/help/contact';
-  static const String feedback = '/help/feedback';
-
-  // Error routes
-  static const String notFound = '/404';
-  static const String error = '/error';
-
-  // Modal routes (for overlays)
-  static const String quickAdd = '/quick-add';
-  static const String calculator = '/calculator';
-  static const String currencyConverter = '/currency-converter';
-  static const String scanner = '/scanner';
 }

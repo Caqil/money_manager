@@ -107,7 +107,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
                     children: [
                       const Icon(Icons.copy, size: 16),
                       const SizedBox(width: AppDimensions.spacingS),
-                      Text('Duplicate Account'),
+                      Text('accounts.duplicate'.tr()),
                     ],
                   ),
                 ),
@@ -193,13 +193,13 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
           final success = await notifier.updateAccount(updatedAccount);
 
           if (success && mounted) {
-            _showSuccessMessage('Account updated successfully');
-            context.go('/accounts/${widget.accountId}');
+            _showSuccessMessage('accounts.updateSuccess'.tr());
+            context.go('/accounts/{widget.accountId}');
           } else if (mounted) {
-            _showErrorMessage('Failed to update account');
+            _showErrorMessage('accounts.updateFailed'.tr());
           }
         } else if (mounted) {
-          _showErrorMessage('Account not found');
+          _showErrorMessage('accounts.notFound'.tr());
         }
       } else {
         // Create new account
@@ -208,10 +208,10 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
         final accountId = await notifier.addAccount(newAccount);
 
         if (accountId != null && mounted) {
-          _showSuccessMessage('Account created successfully');
+          _showSuccessMessage('accounts.createSuccess'.tr());
           context.go('/accounts/$accountId');
         } else if (mounted) {
-          _showErrorMessage('Failed to create account');
+          _showErrorMessage('accounts.createFailed'.tr());
         }
       }
     } catch (error) {
@@ -240,7 +240,7 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     // Navigate to add screen with duplicated data
     final duplicatedAccount = account.copyWith(
       id: '', // Clear ID for new account
-      name: '${account.name} (Copy)',
+      name: '${account.name} (${'accounts.copy'.tr()})',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
@@ -260,9 +260,8 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Account'),
-        content: Text(
-            'Are you sure you want to delete "${account.name}"? This action cannot be undone.'),
+        title: Text('accounts.deleteTitle'.tr()),
+        content: Text(tr('accounts.deleteConfirm', args: [account.name])),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -294,14 +293,15 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
       final success = await notifier.deleteAccount(account.id);
 
       if (success && mounted) {
-        _showSuccessMessage('Account deleted successfully');
+        _showSuccessMessage('accounts.deleteSuccess'.tr());
         context.go('/accounts');
       } else if (mounted) {
-        _showErrorMessage('Failed to delete account');
+        _showErrorMessage('accounts.deleteFailed'.tr());
       }
     } catch (error) {
       if (mounted) {
-        _showErrorMessage('An error occurred: ${error.toString()}');
+        _showErrorMessage(
+            tr('common.errorWithMessage', args: [error.toString()]));
       }
     } finally {
       if (mounted) {

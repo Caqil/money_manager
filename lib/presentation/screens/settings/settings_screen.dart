@@ -166,7 +166,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           icon: Icons.cloud_upload,
           title: 'settings.dataExport'.tr(),
           subtitle: 'settings.exportData'.tr(),
-          onTap: () => context.push(RouteNames.dataExport),
+          onTap: () => context.push(RouteNames.exportData),
           enabled: !_isLoading,
         ),
       ],

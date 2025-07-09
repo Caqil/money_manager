@@ -95,21 +95,31 @@ class SettingsState {
     this.notificationsEnabled = true,
     this.autoBackupEnabled = false,
     this.budgetAlertThreshold = 0.8,
-    this.transactionReminderDays = 7,
+    this.transactionReminderDays = 3,
     this.preferredExportFormat = 'csv',
     this.chartAnimationsEnabled = true,
     this.voiceInputEnabled = false,
     this.voiceInputLanguage = 'en',
-    this.recentCurrencies = const [],
-    this.dashboardWidgets = const [],
-    this.quickActions = const [],
+    this.recentCurrencies = const ['USD', 'EUR', 'GBP'],
+    this.dashboardWidgets = const [
+      'balance_overview',
+      'recent_transactions',
+      'monthly_summary',
+      'quick_actions'
+    ],
+    this.quickActions = const [
+      'add_income',
+      'add_expense',
+      'transfer_funds',
+      'add_goal'
+    ],
     this.transactionsPerPage = 20,
     this.defaultTransactionView = 'list',
-    this.analyticsTrackingEnabled = false,
-    this.isFirstLaunch = true,
+    this.analyticsTrackingEnabled = true,
+    this.isFirstLaunch = false,
     this.lastBackupDate,
     this.error,
-    this.isLoading = false,
+    this.isLoading = true,
   });
 
   SettingsState copyWith({
@@ -166,29 +176,36 @@ class SettingsState {
   }
 }
 
-// COMPLETE Settings notifier with all missing methods
+// IMPROVED Settings notifier with safer provider management
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final SettingsService _service;
+  bool _isInitialized = false;
 
-  // FIXED: Don't assume first launch in initial state - wait for loading
+  // FIXED: Don't trigger loading in constructor
   SettingsNotifier(this._service)
       : super(const SettingsState(
           isFirstLaunch: false, // Changed from true to false as default
           isLoading: true, // Mark as loading initially
-        )) {
-    // Load settings immediately but don't await it in constructor
-    _initializeSettings();
-  }
+        ));
 
-  // FIXED: Separate method for initialization to handle errors properly
-  Future<void> _initializeSettings() async {
-    await loadSettings();
+  // IMPROVED: Manual initialization method to be called after provider is ready
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    // FIXED: Use Future.microtask to ensure state changes happen in next frame
+    await Future.microtask(() async {
+      await loadSettings();
+      _isInitialized = true;
+    });
   }
 
   // Load all settings from service
   Future<void> loadSettings() async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      // FIXED: Only set loading state if we're not already loading to prevent unnecessary rebuilds
+      if (!state.isLoading) {
+        state = state.copyWith(isLoading: true, error: null);
+      }
 
       // Load all settings from the service
       final themeMode = _service.getThemeMode();
@@ -213,6 +230,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
       print('🔧 SettingsNotifier: Loaded isFirstLaunch = $isFirstLaunch');
 
+      // FIXED: Create new state in one operation to minimize state changes
       state = SettingsState(
         themeMode: themeMode,
         language: language,
@@ -248,9 +266,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> setIsFirstLaunch(bool isFirstLaunch) async {
     try {
       print('🔧 SettingsNotifier: Setting isFirstLaunch = $isFirstLaunch');
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setIsFirstLaunch(isFirstLaunch);
-      state = state.copyWith(isFirstLaunch: isFirstLaunch, isLoading: false);
+
+      // FIXED: Use Future.microtask to ensure state change happens safely
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setIsFirstLaunch(isFirstLaunch);
+        state = state.copyWith(isFirstLaunch: isFirstLaunch, isLoading: false);
+      });
+
       print('✅ SettingsNotifier: isFirstLaunch updated successfully');
     } catch (e) {
       print('❌ SettingsNotifier: Failed to update isFirstLaunch: $e');
@@ -264,13 +287,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Set theme mode
   Future<void> setThemeMode(ThemeMode themeMode) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setThemeMode(themeMode);
-      state = state.copyWith(themeMode: themeMode, isLoading: false);
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setThemeMode(themeMode);
+        state = state.copyWith(themeMode: themeMode, isLoading: false);
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update theme: $e',
+        error: 'Failed to update theme mode: $e',
       );
     }
   }
@@ -278,9 +303,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Set language
   Future<void> setLanguage(String language) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setLanguage(language);
-      state = state.copyWith(language: language, isLoading: false);
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setLanguage(language);
+        state = state.copyWith(language: language, isLoading: false);
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -292,13 +319,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Set base currency
   Future<void> setBaseCurrency(String currency) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setBaseCurrency(currency);
-      state = state.copyWith(baseCurrency: currency, isLoading: false);
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setBaseCurrency(currency);
+        state = state.copyWith(baseCurrency: currency, isLoading: false);
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update currency: $e',
+        error: 'Failed to update base currency: $e',
       );
     }
   }
@@ -306,13 +335,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Set notifications enabled
   Future<void> setNotificationsEnabled(bool enabled) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setNotificationsEnabled(enabled);
-      state = state.copyWith(notificationsEnabled: enabled, isLoading: false);
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setNotificationsEnabled(enabled);
+        state = state.copyWith(notificationsEnabled: enabled, isLoading: false);
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update notification settings: $e',
+        error: 'Failed to update notifications setting: $e',
       );
     }
   }
@@ -320,13 +351,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Set auto backup enabled
   Future<void> setAutoBackupEnabled(bool enabled) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setAutoBackupEnabled(enabled);
-      state = state.copyWith(autoBackupEnabled: enabled, isLoading: false);
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setAutoBackupEnabled(enabled);
+        state = state.copyWith(autoBackupEnabled: enabled, isLoading: false);
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: 'Failed to update backup settings: $e',
+        error: 'Failed to update auto backup setting: $e',
       );
     }
   }
@@ -334,9 +367,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Set budget alert threshold
   Future<void> setBudgetAlertThreshold(double threshold) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.setBudgetAlertThreshold(threshold);
-      state = state.copyWith(budgetAlertThreshold: threshold, isLoading: false);
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.setBudgetAlertThreshold(threshold);
+        state =
+            state.copyWith(budgetAlertThreshold: threshold, isLoading: false);
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -514,37 +550,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // Reset all settings to defaults
   Future<void> resetSettings() async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.resetAllSettings();
-      await loadSettings(); // Reload all settings
+      await Future.microtask(() async {
+        state = state.copyWith(isLoading: true, error: null);
+        await _service.resetAllSettings();
+        await loadSettings(); // Reload all settings
+      });
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to reset settings: $e',
-      );
-    }
-  }
-
-  // Export settings
-  Future<Map<String, dynamic>> exportSettings() async {
-    try {
-      return await _service.exportSettings();
-    } catch (e) {
-      state = state.copyWith(error: 'Failed to export settings: $e');
-      rethrow;
-    }
-  }
-
-  // Import settings
-  Future<void> importSettings(Map<String, dynamic> settings) async {
-    try {
-      state = state.copyWith(isLoading: true, error: null);
-      await _service.importSettings(settings);
-      await loadSettings(); // Reload all settings
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Failed to import settings: $e',
       );
     }
   }

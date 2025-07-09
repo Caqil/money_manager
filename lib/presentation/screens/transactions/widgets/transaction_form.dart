@@ -15,10 +15,6 @@ import 'category_selector.dart';
 import 'date_picker_widget.dart';
 import 'receipt_image_picker.dart';
 import 'voice_input_widget.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 
 typedef TransactionFormData = ({
   double amount,
@@ -117,8 +113,6 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-
     return Form(
       key: _formKey,
       child: Column(
@@ -132,10 +126,8 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
           AmountInputWidget(
             initialAmount: _amount,
             onAmountChanged: (amount) {
-              setState(() {
-                _amount = amount;
-                _amountError = _validateAmount(amount);
-              });
+              _amount = amount;
+              _amountError = _validateAmount(amount);
             },
             label: 'transactions.amount'.tr(),
             required: true,
@@ -307,23 +299,32 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
         ),
         const SizedBox(height: AppDimensions.spacingS),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
+              flex: 4, // Give most space to the text field
               child: ShadInputFormField(
                 controller: _notesController,
                 placeholder: Text('transactions.enterNotes'.tr()),
                 maxLines: 3,
                 enabled: widget.enabled && !widget.isLoading,
+                validator: (value) {
+                  // Optional validation for notes
+                  return null;
+                },
               ),
             ),
             const SizedBox(width: AppDimensions.spacingS),
-            VoiceInputWidget(
-              onTextReceived: (text) {
-                setState(() {
-                  _notesController.text = text;
-                });
-              },
-              enabled: widget.enabled && !widget.isLoading,
+            Flexible(
+              flex: 1, // Constrain voice input widget space
+              child: VoiceInputWidget(
+                onTextReceived: (text) {
+                  setState(() {
+                    _notesController.text = text;
+                  });
+                },
+                enabled: widget.enabled && !widget.isLoading,
+              ),
             ),
           ],
         ),
@@ -401,9 +402,53 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
   }
 
   void _handleSubmit() {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_canSubmit()) return;
+    print('📝 Form submission started');
 
+    // Prevent multiple submissions
+    if (widget.isLoading) {
+      print('⚠️ Already loading, skipping submission');
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      print('❌ Form validation failed');
+      return;
+    }
+
+    if (!_canSubmit()) {
+      print('❌ Cannot submit, validation failed');
+      print('  - Amount: $_amount');
+      print('  - Account ID: $_selectedAccountId');
+      print('  - Category ID: $_selectedCategoryId');
+      print('  - Transfer Account ID: $_transferToAccountId');
+      print('  - Type: $_type');
+      return;
+    }
+
+    // Additional validation
+    if (_amount == null || _amount! <= 0) {
+      print('❌ Invalid amount: $_amount');
+      return;
+    }
+
+    if (_selectedAccountId == null || _selectedAccountId!.isEmpty) {
+      print('❌ No account selected');
+      return;
+    }
+
+    if (_type != TransactionType.transfer &&
+        (_selectedCategoryId == null || _selectedCategoryId!.isEmpty)) {
+      print('❌ No category selected for non-transfer transaction');
+      return;
+    }
+
+    if (_type == TransactionType.transfer &&
+        (_transferToAccountId == null || _transferToAccountId!.isEmpty)) {
+      print('❌ No transfer account selected for transfer transaction');
+      return;
+    }
+
+    print('✅ Form validation passed, creating form data');
     final formData = (
       amount: _amount!,
       categoryId: _selectedCategoryId ?? '',
@@ -419,6 +464,16 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
       metadata: null,
     );
 
+    print('📤 Form data created:');
+    print('  - Amount: ${formData.amount}');
+    print('  - Account: ${formData.accountId}');
+    print('  - Category: ${formData.categoryId}');
+    print('  - Type: ${formData.type}');
+    print('  - Currency: ${formData.currency}');
+    print('  - Transfer To: ${formData.transferToAccountId}');
+
+    print('📤 Calling parent submit handler');
+    // Immediately call the parent callback to trigger loading state
     widget.onSubmit?.call(formData);
   }
 
@@ -463,17 +518,6 @@ class _TransactionFormState extends ConsumerState<TransactionForm> {
         return 'transactions.expense'.tr();
       case TransactionType.transfer:
         return 'transactions.transfer'.tr();
-    }
-  }
-
-  IconData _getTypeIcon(TransactionType type) {
-    switch (type) {
-      case TransactionType.income:
-        return Icons.arrow_upward;
-      case TransactionType.expense:
-        return Icons.arrow_downward;
-      case TransactionType.transfer:
-        return Icons.swap_horiz;
     }
   }
 

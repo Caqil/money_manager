@@ -33,6 +33,13 @@ class TransactionDetailScreen extends ConsumerStatefulWidget {
 class _TransactionDetailScreenState
     extends ConsumerState<TransactionDetailScreen> {
   bool _isLoading = false;
+  final ShadPopoverController _moreActionsController = ShadPopoverController();
+
+  @override
+  void dispose() {
+    _moreActionsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,17 +116,17 @@ class _TransactionDetailScreenState
   }
 
   Widget _buildScreen(Transaction transaction) {
-    final theme = ShadTheme.of(context);
-
     return Scaffold(
       appBar: CustomAppBar(
         title: 'transactions.transactionDetails'.tr(),
         showBackButton: true,
         actions: [
           ShadPopover(
+            controller: _moreActionsController,
             popover: (context) => _buildActionsMenu(transaction),
             child: IconButton(
-              onPressed: _isLoading ? null : () {},
+              onPressed:
+                  _isLoading ? null : () => _moreActionsController.toggle(),
               icon: Icon(
                 Icons.more_vert,
                 color: _isLoading ? AppColors.lightDisabled : null,
@@ -130,192 +137,202 @@ class _TransactionDetailScreenState
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        padding: const EdgeInsets.all(AppDimensions.paddingM),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Transaction header with amount
             _buildTransactionHeader(transaction),
-            const SizedBox(height: AppDimensions.spacingL),
 
             // Transaction details
             _buildTransactionDetails(transaction),
-            const SizedBox(height: AppDimensions.spacingL),
 
             // Receipt image (if available)
             if (transaction.imagePath != null) ...[
               _buildReceiptSection(transaction),
-              const SizedBox(height: AppDimensions.spacingL),
             ],
 
             // Related information
             _buildRelatedInformation(transaction),
+
+            // Add some space at the bottom for the FAB
+            const SizedBox(height: 80),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.small(
         onPressed: _isLoading ? null : () => _editTransaction(transaction),
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.edit, color: Colors.white),
+        child: const Icon(Icons.edit, color: Colors.white, size: 20),
       ),
     );
   }
 
   Widget _buildTransactionHeader(Transaction transaction) {
-    final theme = ShadTheme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: _getTransactionTypeColor(transaction.type).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(
+          color: _getTransactionTypeColor(transaction.type).withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Amount and type
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getTypeDisplayName(transaction.type),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _getTransactionTypeColor(transaction.type),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.spacingXs),
+                    Text(
+                      _formatTransactionAmount(transaction),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: _getTransactionTypeColor(transaction.type),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _getTransactionTypeColor(transaction.type),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                ),
+                child: Icon(
+                  _getTransactionTypeIcon(transaction.type),
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
 
-    return ShadCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        child: Column(
-          children: [
-            // Type icon and amount
-            Row(
+          // Date
+          const SizedBox(height: AppDimensions.spacingM),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.paddingS,
+              vertical: AppDimensions.paddingXs,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+            ),
+            child: Row(
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: _getTransactionTypeColor(transaction.type),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                  ),
-                  child: Icon(
-                    _getTransactionTypeIcon(transaction.type),
-                    color: Colors.white,
-                    size: 30,
+                Icon(
+                  Icons.schedule,
+                  size: 14,
+                  color: Colors.grey[600],
+                ),
+                const SizedBox(width: AppDimensions.spacingS),
+                Text(
+                  DateFormat.yMMMd().format(transaction.date),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(width: AppDimensions.spacingM),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _getTypeDisplayName(transaction.type),
-                        style: theme.textTheme.h3,
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXs),
-                      Text(
-                        _formatTransactionAmount(transaction),
-                        style: theme.textTheme.h1.copyWith(
-                          color: _getTransactionTypeColor(transaction.type),
-                        ),
-                      ),
-                    ],
+                const Spacer(),
+                Text(
+                  DateFormat.jm().format(transaction.date),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
             ),
-
-            // Date and time
-            const SizedBox(height: AppDimensions.spacingM),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppDimensions.paddingM),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.muted.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.schedule,
-                    size: 16,
-                    color: theme.colorScheme.mutedForeground,
-                  ),
-                  const SizedBox(width: AppDimensions.spacingS),
-                  Text(
-                    DateFormat.yMMMMEEEEd().format(transaction.date),
-                    style: theme.textTheme.p.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    DateFormat.jm().format(transaction.date),
-                    style: theme.textTheme.small.copyWith(
-                      color: theme.colorScheme.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildTransactionDetails(Transaction transaction) {
-    return ShadCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingM),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'transactions.details'.tr(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Account information
+          _buildDetailItem(
+            icon: Icons.account_balance_wallet,
+            label: transaction.type == TransactionType.transfer
+                ? 'transactions.fromAccount'.tr()
+                : 'transactions.account'.tr(),
+            value: _buildAccountValue(transaction.accountId),
+          ),
 
-            // Account information
+          // Transfer to account (for transfers)
+          if (transaction.type == TransactionType.transfer &&
+              transaction.transferToAccountId != null) ...[
+            const SizedBox(height: AppDimensions.spacingS),
             _buildDetailItem(
-              icon: Icons.account_balance_wallet,
-              label: transaction.type == TransactionType.transfer
-                  ? 'transactions.fromAccount'.tr()
-                  : 'transactions.account'.tr(),
-              value: _buildAccountValue(transaction.accountId),
+              icon: Icons.arrow_forward,
+              label: 'transactions.toAccount'.tr(),
+              value: _buildAccountValue(transaction.transferToAccountId!),
             ),
+          ],
 
-            // Transfer to account (for transfers)
-            if (transaction.type == TransactionType.transfer &&
-                transaction.transferToAccountId != null) ...[
-              const SizedBox(height: AppDimensions.spacingM),
-              _buildDetailItem(
-                icon: Icons.arrow_forward,
-                label: 'transactions.toAccount'.tr(),
-                value: _buildAccountValue(transaction.transferToAccountId!),
-              ),
-            ],
-
-            // Category (for income/expense)
-            if (transaction.type != TransactionType.transfer) ...[
-              const SizedBox(height: AppDimensions.spacingM),
-              _buildDetailItem(
-                icon: Icons.category,
-                label: 'transactions.category'.tr(),
-                value: _buildCategoryValue(transaction.categoryId),
-              ),
-            ],
-
-            // Currency
-            const SizedBox(height: AppDimensions.spacingM),
+          // Category (for income/expense)
+          if (transaction.type != TransactionType.transfer) ...[
+            const SizedBox(height: AppDimensions.spacingS),
             _buildDetailItem(
-              icon: Icons.attach_money,
-              label: 'transactions.currency'.tr(),
-              value: Text(transaction.currency),
+              icon: Icons.category,
+              label: 'transactions.category'.tr(),
+              value: _buildCategoryValue(transaction.categoryId),
             ),
+          ],
 
-            // Notes (if available)
-            if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.spacingM),
-              _buildDetailItem(
-                icon: Icons.note,
-                label: 'transactions.notes'.tr(),
-                value: Text(
-                  transaction.notes!,
-                  style: const TextStyle(
-                    fontStyle: FontStyle.italic,
-                  ),
+          // Currency
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildDetailItem(
+            icon: Icons.attach_money,
+            label: 'transactions.currency'.tr(),
+            value: Text(
+              transaction.currency,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
+
+          // Notes (if available)
+          if (transaction.notes != null && transaction.notes!.isNotEmpty) ...[
+            const SizedBox(height: AppDimensions.spacingS),
+            _buildDetailItem(
+              icon: Icons.note_alt,
+              label: 'transactions.notes'.tr(),
+              value: Text(
+                transaction.notes!,
+                style: const TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey,
                 ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -325,41 +342,58 @@ class _TransactionDetailScreenState
     required String label,
     required Widget value,
   }) {
-    final theme = ShadTheme.of(context);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.muted,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingM,
+        vertical: AppDimensions.paddingS,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+            ),
+            child: Icon(
+              icon,
+              size: 14,
+              color: AppColors.primary,
+            ),
           ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: theme.colorScheme.foreground,
-          ),
-        ),
-        const SizedBox(width: AppDimensions.spacingM),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.small.copyWith(
-                  color: theme.colorScheme.mutedForeground,
+          const SizedBox(width: AppDimensions.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppDimensions.spacingXs),
-              value,
-            ],
+                const SizedBox(height: 2),
+                DefaultTextStyle(
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  child: value,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -409,161 +443,216 @@ class _TransactionDetailScreenState
   }
 
   Widget _buildReceiptSection(Transaction transaction) {
-    final theme = ShadTheme.of(context);
-
-    return ShadCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingM),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'transactions.receiptImage'.tr(),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.spacingM),
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.receipt,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: AppDimensions.spacingS),
+              Text(
+                'transactions.receiptImage'.tr(),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                 ),
-                const Spacer(),
-                ShadButton.ghost(
-                  size: ShadButtonSize.sm,
-                  onPressed: () => _viewFullImage(transaction.imagePath!),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => _viewFullImage(transaction.imagePath!),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingS,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.zoom_in, size: 16),
-                      const SizedBox(width: AppDimensions.spacingXs),
-                      Text('common.view'.tr()),
+                      Icon(
+                        Icons.zoom_in,
+                        size: 12,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'common.view'.tr(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image.file(
-                  File(transaction.imagePath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: theme.colorScheme.muted,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.broken_image_outlined,
-                            size: 48,
-                            color: theme.colorScheme.mutedForeground,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacingS),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.file(
+                File(transaction.imagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[100],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image_outlined,
+                          size: 32,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: AppDimensions.spacingXs),
+                        Text(
+                          'transactions.imageLoadError'.tr(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
                           ),
-                          const SizedBox(height: AppDimensions.spacingS),
-                          Text(
-                            'transactions.imageLoadError'.tr(),
-                            style: theme.textTheme.small.copyWith(
-                              color: theme.colorScheme.mutedForeground,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRelatedInformation(Transaction transaction) {
-    final theme = ShadTheme.of(context);
-
-    return ShadCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingM),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'transactions.relatedInfo'.tr(),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+    return Container(
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: Colors.grey[200]!, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Colors.grey[600],
               ),
-            ),
-            const SizedBox(height: AppDimensions.spacingM),
-
-            // Creation info
-            _buildInfoRow(
-              'transactions.createdAt'.tr(),
-              DateFormat.yMMMd().add_jm().format(transaction.createdAt),
-            ),
-
-            // Last updated
-            if (transaction.updatedAt != transaction.createdAt) ...[
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildInfoRow(
-                'transactions.lastUpdated'.tr(),
-                DateFormat.yMMMd().add_jm().format(transaction.updatedAt),
+              const SizedBox(width: AppDimensions.spacingS),
+              Text(
+                'transactions.relatedInfo'.tr(),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: AppDimensions.spacingM),
 
-            // Transaction ID
+          // Creation info
+          _buildInfoRow(
+            'transactions.createdAt'.tr(),
+            DateFormat.yMMMd().add_jm().format(transaction.createdAt),
+          ),
+
+          // Last updated
+          if (transaction.updatedAt != transaction.createdAt) ...[
             const SizedBox(height: AppDimensions.spacingS),
             _buildInfoRow(
-              'transactions.transactionId'.tr(),
-              transaction.id,
-              copyable: true,
+              'transactions.lastUpdated'.tr(),
+              DateFormat.yMMMd().add_jm().format(transaction.updatedAt),
             ),
-
-            // Recurring info (if applicable)
-            if (transaction.isRecurring) ...[
-              const SizedBox(height: AppDimensions.spacingS),
-              _buildInfoRow(
-                'transactions.recurringTransaction'.tr(),
-                'transactions.yes'.tr(),
-              ),
-            ],
           ],
-        ),
+
+          // Transaction ID (shortened for UI)
+          const SizedBox(height: AppDimensions.spacingS),
+          _buildInfoRow(
+            'transactions.transactionId'.tr(),
+            '${transaction.id.substring(0, 8)}...',
+            copyable: true,
+            fullValue: transaction.id,
+          ),
+
+          // Recurring info (if applicable)
+          if (transaction.isRecurring) ...[
+            const SizedBox(height: AppDimensions.spacingS),
+            _buildInfoRow(
+              'transactions.recurringTransaction'.tr(),
+              'transactions.yes'.tr(),
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {bool copyable = false}) {
-    final theme = ShadTheme.of(context);
-
+  Widget _buildInfoRow(String label, String value,
+      {bool copyable = false, String? fullValue}) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 120,
+        Expanded(
+          flex: 2,
           child: Text(
             label,
-            style: theme.textTheme.small.copyWith(
-              color: theme.colorScheme.mutedForeground,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
             ),
           ),
         ),
         Expanded(
+          flex: 3,
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   value,
-                  style: theme.textTheme.small,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               if (copyable)
-                ShadButton.ghost(
-                  size: ShadButtonSize.sm,
-                  onPressed: () => _copyToClipboard(value),
-                  child: const Icon(Icons.copy, size: 14),
+                GestureDetector(
+                  onTap: () => _copyToClipboard(fullValue ?? value),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      Icons.copy,
+                      size: 12,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -573,46 +662,101 @@ class _TransactionDetailScreenState
   }
 
   Widget _buildActionsMenu(Transaction transaction) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(
-          leading: const Icon(Icons.edit, size: 18),
-          title: Text('common.edit'.tr()),
-          onTap: () {
-            Navigator.of(context).pop();
-            _editTransaction(transaction);
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.copy, size: 18),
-          title: Text('transactions.duplicate'.tr()),
-          onTap: () {
-            Navigator.of(context).pop();
-            _duplicateTransaction(transaction);
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.share, size: 18),
-          title: Text('common.share'.tr()),
-          onTap: () {
-            Navigator.of(context).pop();
-            _shareTransaction(transaction);
-          },
-        ),
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.delete, size: 18, color: AppColors.error),
-          title: Text(
-            'common.delete'.tr(),
-            style: const TextStyle(color: AppColors.error),
+    return Container(
+      width: 180,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          onTap: () {
-            Navigator.of(context).pop();
-            _showDeleteConfirmation(transaction);
-          },
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildActionMenuItem(
+            icon: Icons.edit,
+            title: 'common.edit'.tr(),
+            onTap: () {
+              _moreActionsController.hide();
+              _editTransaction(transaction);
+            },
+          ),
+          _buildActionMenuItem(
+            icon: Icons.copy,
+            title: 'transactions.duplicate'.tr(),
+            onTap: () {
+              _moreActionsController.hide();
+              _duplicateTransaction(transaction);
+            },
+          ),
+          _buildActionMenuItem(
+            icon: Icons.share,
+            title: 'common.share'.tr(),
+            onTap: () {
+              _moreActionsController.hide();
+              _shareTransaction(transaction);
+            },
+          ),
+          Container(
+            height: 1,
+            margin:
+                const EdgeInsets.symmetric(horizontal: AppDimensions.paddingS),
+            color: Colors.grey[200],
+          ),
+          _buildActionMenuItem(
+            icon: Icons.delete,
+            title: 'common.delete'.tr(),
+            textColor: AppColors.error,
+            iconColor: AppColors.error,
+            onTap: () {
+              _moreActionsController.hide();
+              _showDeleteConfirmation(transaction);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color? textColor,
+    Color? iconColor,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingM,
+          vertical: AppDimensions.paddingS,
         ),
-      ],
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: iconColor ?? Colors.grey[600],
+            ),
+            const SizedBox(width: AppDimensions.spacingM),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: textColor ?? Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -650,7 +794,6 @@ class _TransactionDetailScreenState
       ShadToast.raw(
         variant: ShadToastVariant.primary,
         description: Text('common.copiedToClipboard'.tr()),
-       
       ),
     );
   }

@@ -219,13 +219,6 @@ class _SplashLoadingWidgetState extends State<SplashLoadingWidget>
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingS),
-              Text(
-                'app.tagline'.tr(),
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
-                ),
-                textAlign: TextAlign.center,
-              ),
             ],
           ),
         );

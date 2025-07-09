@@ -25,7 +25,7 @@ final transactionCategoryFilterProvider = StateProvider<String?>((ref) => null);
 final transactionAccountFilterProvider = StateProvider<String?>((ref) => null);
 final transactionSearchQueryProvider = StateProvider<String>((ref) => '');
 
-// Filtered transactions provider
+// Cached and optimized filtered transactions provider
 final filteredTransactionsProvider = Provider<AsyncValue<List<Transaction>>>(
   (ref) {
     final transactions = ref.watch(transactionListProvider);
@@ -37,48 +37,48 @@ final filteredTransactionsProvider = Provider<AsyncValue<List<Transaction>>>(
 
     return transactions.when(
       data: (list) {
-        var filtered = list.where((transaction) {
-          // Type filter
-          if (typeFilter != null && transaction.type != typeFilter) {
-            return false;
-          }
+        // Early return if no filters applied and already sorted
+        if (typeFilter == null &&
+            dateRangeFilter == null &&
+            (categoryFilter == null || categoryFilter.isEmpty) &&
+            (accountFilter == null || accountFilter.isEmpty) &&
+            searchQuery.isEmpty) {
+          return AsyncValue.data(list);
+        }
 
-          // Date range filter
-          if (dateRangeFilter != null) {
-            if (transaction.date.isBefore(dateRangeFilter.start) ||
-                transaction.date.isAfter(dateRangeFilter.end)) {
-              return false;
-            }
-          }
+        // Use more efficient filtering with early exits
+        final filtered = <Transaction>[];
+        final searchLower = searchQuery.toLowerCase();
+
+        for (final transaction in list) {
+          // Type filter - fastest check first
+          if (typeFilter != null && transaction.type != typeFilter) continue;
 
           // Category filter
           if (categoryFilter != null && categoryFilter.isNotEmpty) {
-            if (transaction.categoryId != categoryFilter) {
-              return false;
-            }
+            if (transaction.categoryId != categoryFilter) continue;
           }
 
           // Account filter
           if (accountFilter != null && accountFilter.isNotEmpty) {
             if (transaction.accountId != accountFilter &&
-                transaction.transferToAccountId != accountFilter) {
-              return false;
-            }
+                transaction.transferToAccountId != accountFilter) continue;
           }
 
-          // Search query filter
+          // Date range filter
+          if (dateRangeFilter != null) {
+            if (transaction.date.isBefore(dateRangeFilter.start) ||
+                transaction.date.isAfter(dateRangeFilter.end)) continue;
+          }
+
+          // Search query filter - most expensive check last
           if (searchQuery.isNotEmpty) {
             final notes = transaction.notes?.toLowerCase() ?? '';
-            if (!notes.contains(searchQuery.toLowerCase())) {
-              return false;
-            }
+            if (!notes.contains(searchLower)) continue;
           }
 
-          return true;
-        }).toList();
-
-        // Sort by date (newest first)
-        filtered.sort((a, b) => b.date.compareTo(a.date));
+          filtered.add(transaction);
+        }
 
         return AsyncValue.data(filtered);
       },
@@ -175,6 +175,22 @@ final currentMonthTransactionsProvider = FutureProvider<List<Transaction>>(
   },
 );
 
+// Paginated transactions provider for better performance
+final paginatedTransactionsProvider =
+    Provider.family<AsyncValue<List<Transaction>>, int>((ref, pageSize) {
+  final transactions = ref.watch(filteredTransactionsProvider);
+
+  return transactions.when(
+    data: (list) {
+      // Limit the initial load to reduce lag
+      final limitedList = list.take(pageSize).toList();
+      return AsyncValue.data(limitedList);
+    },
+    loading: () => const AsyncValue.loading(),
+    error: (error, stack) => AsyncValue.error(error, stack),
+  );
+});
+
 // Transaction operations state
 class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
   final TransactionRepository _repository;
@@ -188,63 +204,144 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     if (mounted) {
       state = newState;
     }
-  }
+  } // Load all transactions with caching
 
-  // Load all transactions
   Future<void> loadTransactions() async {
     try {
+      print('🔄 Loading transactions...');
       _safeSetState(const AsyncValue.loading());
+
+      print('📦 Calling repository getAllTransactions...');
       final transactions = await _repository.getAllTransactions();
+      print('✅ Got ${transactions.length} transactions from repository');
+
+      // Pre-sort transactions by date (newest first) for better performance
+      transactions.sort((a, b) => b.date.compareTo(a.date));
+      print('✅ Transactions sorted by date');
+
+      // Debug: Print first few transactions if any exist
+      if (transactions.isNotEmpty) {
+        print('📋 Sample transactions:');
+        for (int i = 0; i < transactions.length && i < 3; i++) {
+          final t = transactions[i];
+          print(
+              '  ${i + 1}. ID: ${t.id}, Amount: ${t.amount}, Type: ${t.type}, Date: ${t.date}');
+        }
+      } else {
+        print('⚠️ No transactions found in database');
+      }
+
       _safeSetState(AsyncValue.data(transactions));
+      print('✅ Transactions loaded successfully');
     } catch (error, stackTrace) {
+      print('❌ Error loading transactions: $error');
+      print('📍 Stack trace: $stackTrace');
       _safeSetState(AsyncValue.error(error, stackTrace));
     }
   }
 
-  // Add transaction
+  // Add transaction with optimistic update
   Future<String?> addTransaction(Transaction transaction) async {
-    if (!mounted) return null;
+    if (!mounted) {
+      print('❌ TransactionNotifier not mounted');
+      return null;
+    }
+
+    print('🔄 Starting addTransaction in provider');
+    print(
+        '📝 Transaction: ID=${transaction.id}, Amount=${transaction.amount}, Type=${transaction.type}');
 
     try {
+      // Skip optimistic update on slower platforms to prevent UI freezing
+      // Just perform the database operation directly
+      print('💾 Calling repository addTransaction...');
       final id = await _repository.addTransaction(transaction);
-      if (mounted) {
-        await loadTransactions(); // Refresh list
+      print('✅ Repository returned ID: $id');
+
+      if (mounted && id.isNotEmpty) {
+        // Only refresh if needed - add the new transaction to the list efficiently
+        final currentState = state;
+        if (currentState is AsyncData<List<Transaction>>) {
+          print('📋 Adding transaction to current list');
+          final currentList = List<Transaction>.from(currentState.value);
+          final newTransactionWithId = transaction.copyWith(id: id);
+          currentList.insert(0, newTransactionWithId); // Add to beginning
+          _safeSetState(AsyncValue.data(currentList));
+          print('✅ Transaction added to local state');
+        }
+        return id;
+      } else if (mounted) {
+        print('⚠️ ID is empty or not mounted, refreshing list');
+        // Fallback: refresh the entire list if something went wrong
+        await loadTransactions();
+        return null;
       }
-      return id;
+
+      return id.isNotEmpty ? id : null;
     } catch (error, stackTrace) {
-      _safeSetState(AsyncValue.error(error, stackTrace));
+      print('❌ Error in addTransaction: $error');
+      print('📍 Stack trace: $stackTrace');
+
+      // On error, refresh the list to ensure consistency
+      if (mounted) {
+        await loadTransactions();
+        _safeSetState(AsyncValue.error(error, stackTrace));
+      }
       return null;
     }
   }
 
-  // Update transaction
+  // Update transaction with optimistic update
   Future<bool> updateTransaction(Transaction transaction) async {
     if (!mounted) return false;
 
     try {
-      await _repository.updateTransaction(transaction);
-      if (mounted) {
-        await loadTransactions(); // Refresh list
+      // Optimistic update - update in local state immediately
+      final currentState = state;
+      if (currentState is AsyncData<List<Transaction>>) {
+        final currentList = List<Transaction>.from(currentState.value);
+        final index = currentList.indexWhere((t) => t.id == transaction.id);
+        if (index != -1) {
+          currentList[index] = transaction;
+          _safeSetState(AsyncValue.data(currentList));
+        }
       }
+
+      // Perform actual database operation
+      await _repository.updateTransaction(transaction);
       return true;
     } catch (error, stackTrace) {
-      _safeSetState(AsyncValue.error(error, stackTrace));
+      // Rollback optimistic update on error
+      if (mounted) {
+        await loadTransactions();
+        _safeSetState(AsyncValue.error(error, stackTrace));
+      }
       return false;
     }
   }
 
-  // Delete transaction
+  // Delete transaction with optimistic update
   Future<bool> deleteTransaction(String id) async {
     if (!mounted) return false;
 
     try {
-      await _repository.deleteTransaction(id);
-      if (mounted) {
-        await loadTransactions(); // Refresh list
+      // Optimistic update - remove from local state immediately
+      final currentState = state;
+      if (currentState is AsyncData<List<Transaction>>) {
+        final currentList = List<Transaction>.from(currentState.value);
+        currentList.removeWhere((t) => t.id == id);
+        _safeSetState(AsyncValue.data(currentList));
       }
+
+      // Perform actual database operation
+      await _repository.deleteTransaction(id);
       return true;
     } catch (error, stackTrace) {
-      _safeSetState(AsyncValue.error(error, stackTrace));
+      // Rollback optimistic update on error
+      if (mounted) {
+        await loadTransactions();
+        _safeSetState(AsyncValue.error(error, stackTrace));
+      }
       return false;
     }
   }

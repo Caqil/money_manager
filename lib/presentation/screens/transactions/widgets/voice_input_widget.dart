@@ -152,33 +152,39 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
       );
     }
 
-    return ShadPopover(
-      popover: _isListening
-          ? (context) => _buildListeningPopover()
-          : (context) => const SizedBox.shrink(),
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _isListening ? _scaleAnimation.value : 1.0,
-            child: Opacity(
-              opacity: _isListening ? _opacityAnimation.value : 1.0,
-              child: ShadButton.outline(
-                size: ShadButtonSize.sm,
-                onPressed: widget.enabled ? _toggleListening : null,
-                backgroundColor:
-                    _isListening ? AppColors.primary.withOpacity(0.1) : null,
-                child: Icon(
-                  _isListening ? Icons.mic : Icons.mic_none,
-                  size: 16,
-                  color: _isListening
-                      ? AppColors.primary
-                      : theme.colorScheme.foreground,
+    return Container(
+      constraints: const BoxConstraints(
+        maxWidth: 48, // Constrain width to prevent overflow
+        maxHeight: 48,
+      ),
+      child: ShadPopover(
+        visible: _isListening,
+        popover: (context) =>
+            _isListening ? _buildListeningPopover() : const SizedBox.shrink(),
+        child: AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _isListening ? _scaleAnimation.value : 1.0,
+              child: Opacity(
+                opacity: _isListening ? _opacityAnimation.value : 1.0,
+                child: ShadButton.outline(
+                  size: ShadButtonSize.sm,
+                  onPressed: widget.enabled ? _toggleListening : null,
+                  backgroundColor:
+                      _isListening ? AppColors.primary.withOpacity(0.1) : null,
+                  child: Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    size: 16,
+                    color: _isListening
+                        ? AppColors.primary
+                        : theme.colorScheme.foreground,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -425,7 +431,6 @@ class _VoiceInputWidgetState extends State<VoiceInputWidget>
         variant: ShadToastVariant.primary,
         description: Text(message),
         backgroundColor: AppColors.error,
-        
       ),
     );
   }

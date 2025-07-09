@@ -175,7 +175,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'dashboard.totalBalance'.tr(),
+                        'accounts.totalBalance'.tr(),
                         style: theme.textTheme.muted,
                       ),
                       const SizedBox(height: AppDimensions.spacingXs),
@@ -217,7 +217,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard>
                 Expanded(
                   child: _buildStatCard(
                     icon: Icons.credit_card,
-                    label: 'Credit Available',
+                    label: 'accounts.availableBalance'.tr(),
                     value: creditAvailable,
                     currency: defaultCurrency,
                     color: AppColors.warning,
@@ -270,7 +270,7 @@ class _BalanceCardState extends ConsumerState<BalanceCard>
                       children: [
                         const Icon(Icons.add, size: AppDimensions.iconS),
                         const SizedBox(width: AppDimensions.spacingS),
-                        Text('quickActions.addExpense'.tr()),
+                        Text('accounts.addExpense'.tr()),
                       ],
                     ),
                   ),

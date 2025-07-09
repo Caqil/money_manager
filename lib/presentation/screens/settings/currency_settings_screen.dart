@@ -24,67 +24,46 @@ class _CurrencySettingsScreenState
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  // Currency data with display names and regions
   static const Map<String, Map<String, String>> _currencyData = {
-    'USD': {'name': 'US Dollar', 'region': 'United States', 'symbol': '\$'},
-    'EUR': {'name': 'Euro', 'region': 'European Union', 'symbol': '€'},
-    'GBP': {'name': 'British Pound', 'region': 'United Kingdom', 'symbol': '£'},
-    'JPY': {'name': 'Japanese Yen', 'region': 'Japan', 'symbol': '¥'},
-    'CAD': {'name': 'Canadian Dollar', 'region': 'Canada', 'symbol': 'C\$'},
-    'AUD': {
-      'name': 'Australian Dollar',
-      'region': 'Australia',
-      'symbol': 'A\$'
-    },
-    'CHF': {'name': 'Swiss Franc', 'region': 'Switzerland', 'symbol': 'CHF'},
-    'CNY': {'name': 'Chinese Yuan', 'region': 'China', 'symbol': '¥'},
-    'INR': {'name': 'Indian Rupee', 'region': 'India', 'symbol': '₹'},
-    'KRW': {'name': 'South Korean Won', 'region': 'South Korea', 'symbol': '₩'},
-    'SGD': {'name': 'Singapore Dollar', 'region': 'Singapore', 'symbol': 'S\$'},
-    'HKD': {
-      'name': 'Hong Kong Dollar',
-      'region': 'Hong Kong',
-      'symbol': 'HK\$'
-    },
-    'NZD': {
-      'name': 'New Zealand Dollar',
-      'region': 'New Zealand',
-      'symbol': 'NZ\$'
-    },
-    'SEK': {'name': 'Swedish Krona', 'region': 'Sweden', 'symbol': 'kr'},
-    'NOK': {'name': 'Norwegian Krone', 'region': 'Norway', 'symbol': 'kr'},
-    'DKK': {'name': 'Danish Krone', 'region': 'Denmark', 'symbol': 'kr'},
-    'PLN': {'name': 'Polish Zloty', 'region': 'Poland', 'symbol': 'zł'},
-    'CZK': {'name': 'Czech Koruna', 'region': 'Czech Republic', 'symbol': 'Kč'},
-    'HUF': {'name': 'Hungarian Forint', 'region': 'Hungary', 'symbol': 'Ft'},
-    'RUB': {'name': 'Russian Ruble', 'region': 'Russia', 'symbol': '₽'},
-    'BRL': {'name': 'Brazilian Real', 'region': 'Brazil', 'symbol': 'R\$'},
-    'MXN': {'name': 'Mexican Peso', 'region': 'Mexico', 'symbol': 'MX\$'},
-    'ARS': {'name': 'Argentine Peso', 'region': 'Argentina', 'symbol': '\$'},
-    'CLP': {'name': 'Chilean Peso', 'region': 'Chile', 'symbol': '\$'},
-    'COP': {'name': 'Colombian Peso', 'region': 'Colombia', 'symbol': '\$'},
-    'PEN': {'name': 'Peruvian Sol', 'region': 'Peru', 'symbol': 'S/'},
-    'ZAR': {
-      'name': 'South African Rand',
-      'region': 'South Africa',
-      'symbol': 'R'
-    },
-    'EGP': {'name': 'Egyptian Pound', 'region': 'Egypt', 'symbol': '£'},
-    'NGN': {'name': 'Nigerian Naira', 'region': 'Nigeria', 'symbol': '₦'},
-    'TRY': {'name': 'Turkish Lira', 'region': 'Turkey', 'symbol': '₺'},
-    'ILS': {'name': 'Israeli Shekel', 'region': 'Israel', 'symbol': '₪'},
-    'AED': {
-      'name': 'UAE Dirham',
-      'region': 'United Arab Emirates',
-      'symbol': 'د.إ'
-    },
-    'SAR': {'name': 'Saudi Riyal', 'region': 'Saudi Arabia', 'symbol': 'ر.س'},
-    'QAR': {'name': 'Qatari Riyal', 'region': 'Qatar', 'symbol': 'ر.ق'},
-    'THB': {'name': 'Thai Baht', 'region': 'Thailand', 'symbol': '฿'},
-    'VND': {'name': 'Vietnamese Dong', 'region': 'Vietnam', 'symbol': '₫'},
-    'IDR': {'name': 'Indonesian Rupiah', 'region': 'Indonesia', 'symbol': 'Rp'},
-    'MYR': {'name': 'Malaysian Ringgit', 'region': 'Malaysia', 'symbol': 'RM'},
-    'PHP': {'name': 'Philippine Peso', 'region': 'Philippines', 'symbol': '₱'},
+    'USD': {'name': 'US Dollar', 'symbol': '\$'},
+    'EUR': {'name': 'Euro', 'symbol': '€'},
+    'GBP': {'name': 'British Pound', 'symbol': '£'},
+    'JPY': {'name': 'Japanese Yen', 'symbol': '¥'},
+    'CAD': {'name': 'Canadian Dollar', 'symbol': 'C\$'},
+    'AUD': {'name': 'Australian Dollar', 'symbol': 'A\$'},
+    'CHF': {'name': 'Swiss Franc', 'symbol': 'CHF'},
+    'CNY': {'name': 'Chinese Yuan', 'symbol': '¥'},
+    'INR': {'name': 'Indian Rupee', 'symbol': '₹'},
+    'KRW': {'name': 'South Korean Won', 'symbol': '₩'},
+    'SGD': {'name': 'Singapore Dollar', 'symbol': 'S\$'},
+    'HKD': {'name': 'Hong Kong Dollar', 'symbol': 'HK\$'},
+    'NZD': {'name': 'New Zealand Dollar', 'symbol': 'NZ\$'},
+    'SEK': {'name': 'Swedish Krona', 'symbol': 'kr'},
+    'NOK': {'name': 'Norwegian Krone', 'symbol': 'kr'},
+    'DKK': {'name': 'Danish Krone', 'symbol': 'kr'},
+    'PLN': {'name': 'Polish Zloty', 'symbol': 'zł'},
+    'CZK': {'name': 'Czech Koruna', 'symbol': 'Kč'},
+    'HUF': {'name': 'Hungarian Forint', 'symbol': 'Ft'},
+    'RUB': {'name': 'Russian Ruble', 'symbol': '₽'},
+    'BRL': {'name': 'Brazilian Real', 'symbol': 'R\$'},
+    'MXN': {'name': 'Mexican Peso', 'symbol': 'MX\$'},
+    'ARS': {'name': 'Argentine Peso', 'symbol': '\$'},
+    'CLP': {'name': 'Chilean Peso', 'symbol': '\$'},
+    'COP': {'name': 'Colombian Peso', 'symbol': '\$'},
+    'PEN': {'name': 'Peruvian Sol', 'symbol': 'S/'},
+    'ZAR': {'name': 'South African Rand', 'symbol': 'R'},
+    'EGP': {'name': 'Egyptian Pound', 'symbol': '£'},
+    'NGN': {'name': 'Nigerian Naira', 'symbol': '₦'},
+    'TRY': {'name': 'Turkish Lira', 'symbol': '₺'},
+    'ILS': {'name': 'Israeli Shekel', 'symbol': '₪'},
+    'AED': {'name': 'UAE Dirham', 'symbol': 'د.إ'},
+    'SAR': {'name': 'Saudi Riyal', 'symbol': 'ر.س'},
+    'QAR': {'name': 'Qatari Riyal', 'symbol': 'ر.ق'},
+    'THB': {'name': 'Thai Baht', 'symbol': '฿'},
+    'VND': {'name': 'Vietnamese Dong', 'symbol': '₫'},
+    'IDR': {'name': 'Indonesian Rupiah', 'symbol': 'Rp'},
+    'MYR': {'name': 'Malaysian Ringgit', 'symbol': 'RM'},
+    'PHP': {'name': 'Philippine Peso', 'symbol': '₱'},
   };
 
   @override
@@ -107,360 +86,146 @@ class _CurrencySettingsScreenState
           ? const LoadingWidget()
           : Column(
               children: [
-                // Current currency section
-                _buildCurrentCurrencySection(settings),
-
                 // Search bar
-                _buildSearchBar(theme),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: ShadInput(
+                    controller: _searchController,
+                    placeholder: Text('currencies.searchPlaceholder'.tr()),
+                    leading: const Icon(Icons.search, size: 20),
+                    onChanged: (value) =>
+                        setState(() => _searchQuery = value.toLowerCase()),
+                  ),
+                ),
 
                 // Currency list
-                Expanded(
-                  child: _buildCurrencyList(settings),
-                ),
+                Expanded(child: _buildCurrencyList(settings, theme)),
               ],
             ),
     );
   }
 
-  Widget _buildCurrentCurrencySection(SettingsState settings) {
+  Widget _buildCurrencyList(SettingsState settings, ShadThemeData theme) {
     final currentCurrency = settings.baseCurrency;
-    final currencyInfo = _currencyData[currentCurrency];
 
-    return Container(
-      margin: const EdgeInsets.all(AppDimensions.paddingL),
-      child: ShadCard(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusM),
-                    ),
-                    child: Center(
-                      child: Text(
-                        currencyInfo?['symbol'] ?? currentCurrency,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.spacingM),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'settings.currentBaseCurrency'.tr(),
-                          style: ShadTheme.of(context).textTheme.small.copyWith(
-                                color: ShadTheme.of(context)
-                                    .colorScheme
-                                    .mutedForeground,
-                              ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          currencyInfo?['name'] ?? currentCurrency,
-                          style: ShadTheme.of(context).textTheme.h4,
-                        ),
-                        Text(
-                          currencyInfo?['region'] ?? '',
-                          style: ShadTheme.of(context).textTheme.small.copyWith(
-                                color: ShadTheme.of(context)
-                                    .colorScheme
-                                    .mutedForeground,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusS),
-                    ),
-                    child: Text(
-                      'settings.active'.tr(),
-                      style: ShadTheme.of(context).textTheme.small.copyWith(
-                            color: AppColors.success,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Sample amount display
-              const SizedBox(height: AppDimensions.spacingM),
-              Container(
-                padding: const EdgeInsets.all(AppDimensions.paddingM),
-                decoration: BoxDecoration(
-                  color:
-                      ShadTheme.of(context).colorScheme.muted.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'settings.sampleAmount'.tr(),
-                      style: ShadTheme.of(context).textTheme.small,
-                    ),
-                    Text(
-                      CurrencyFormatter.format(1234.56,
-                          currency: currentCurrency),
-                      style: ShadTheme.of(context).textTheme.large.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(ShadThemeData theme) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-      child: ShadInput(
-        controller: _searchController,
-        placeholder: Text('settings.searchCurrencies'.tr()),
-        leading: const Icon(Icons.search, size: 20),
-        onChanged: (value) {
-          setState(() {
-            _searchQuery = value.toLowerCase();
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildCurrencyList(SettingsState settings) {
-    final currentCurrency = settings.baseCurrency;
-    final recentCurrencies = settings.recentCurrencies;
-
-    // Filter currencies based on search
-    final filteredCurrencies = _currencyData.entries.where((entry) {
+    var filteredCurrencies = _currencyData.entries.where((entry) {
       if (_searchQuery.isEmpty) return true;
-
-      final code = entry.key.toLowerCase();
-      final name = entry.value['name']!.toLowerCase();
-      final region = entry.value['region']!.toLowerCase();
-
-      return code.contains(_searchQuery) ||
-          name.contains(_searchQuery) ||
-          region.contains(_searchQuery);
+      return entry.value['name']!.toLowerCase().contains(_searchQuery) ||
+          entry.key.toLowerCase().contains(_searchQuery);
     }).toList();
 
-    // Sort: current first, then recent, then alphabetical
+    // Current currency first, then alphabetical
     filteredCurrencies.sort((a, b) {
       if (a.key == currentCurrency) return -1;
       if (b.key == currentCurrency) return 1;
-
-      final aIsRecent = recentCurrencies.contains(a.key);
-      final bIsRecent = recentCurrencies.contains(b.key);
-
-      if (aIsRecent && !bIsRecent) return -1;
-      if (!aIsRecent && bIsRecent) return 1;
-
       return a.value['name']!.compareTo(b.value['name']!);
     });
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingM,
-      ),
-      itemCount:
-          filteredCurrencies.length + (recentCurrencies.isNotEmpty ? 1 : 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: filteredCurrencies.length,
       itemBuilder: (context, index) {
-        // Show recent currencies section header
-        if (recentCurrencies.isNotEmpty && index == 0) {
-          return _buildSectionHeader('settings.recentCurrencies'.tr());
-        }
-
-        final adjustedIndex = recentCurrencies.isNotEmpty ? index - 1 : index;
-        final entry = filteredCurrencies[adjustedIndex];
+        final entry = filteredCurrencies[index];
         final currencyCode = entry.key;
         final currencyInfo = entry.value;
+        final isSelected = currencyCode == currentCurrency;
 
-        return _buildCurrencyItem(
-          currencyCode,
-          currencyInfo,
-          currentCurrency,
-          recentCurrencies.contains(currencyCode),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: AppDimensions.paddingS,
-        top: AppDimensions.paddingM,
-        bottom: AppDimensions.paddingS,
-      ),
-      child: Text(
-        title,
-        style: ShadTheme.of(context).textTheme.h4.copyWith(
-              color: AppColors.primary,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildCurrencyItem(
-    String currencyCode,
-    Map<String, String> currencyInfo,
-    String currentCurrency,
-    bool isRecent,
-  ) {
-    final isSelected = currencyCode == currentCurrency;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.spacingXs),
-      child: ShadCard(
-        child: InkWell(
-          onTap: isSelected ? null : () => _selectCurrency(currencyCode),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingM),
-            child: Row(
-              children: [
-                // Currency symbol
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: isSelected ? null : () => _selectCurrency(currencyCode),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withOpacity(0.1)
+                      : theme.colorScheme.background,
+                  border: Border.all(
                     color: isSelected
-                        ? AppColors.primary.withOpacity(0.1)
-                        : ShadTheme.of(context)
-                            .colorScheme
-                            .muted
-                            .withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                        ? AppColors.primary
+                        : theme.colorScheme.border,
+                    width: isSelected ? 2 : 1,
                   ),
-                  child: Center(
-                    child: Text(
-                      currencyInfo['symbol']!,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isSelected ? AppColors.primary : null,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    // Currency symbol
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary.withOpacity(0.15)
+                            : theme.colorScheme.muted.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Center(
+                        child: Text(
+                          currencyInfo['symbol']!,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? AppColors.primary : null,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spacingM),
+                    const SizedBox(width: 16),
 
-                // Currency info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    // Currency info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             currencyCode,
-                            style: ShadTheme.of(context)
-                                .textTheme
-                                .large
-                                .copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: isSelected ? AppColors.primary : null,
-                                ),
-                          ),
-                          const SizedBox(width: AppDimensions.spacingS),
-                          if (isRecent && !isSelected)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusXs),
-                              ),
-                              child: Text(
-                                'settings.recent'.tr(),
-                                style: ShadTheme.of(context)
-                                    .textTheme
-                                    .small
-                                    .copyWith(
-                                      color: AppColors.primary,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
+                            style: theme.textTheme.large.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? AppColors.primary : null,
                             ),
+                          ),
+                          Text(
+                            currencyInfo['name']!,
+                            style: theme.textTheme.p.copyWith(
+                              color: theme.colorScheme.mutedForeground,
+                            ),
+                          ),
                         ],
                       ),
-                      Text(
-                        currencyInfo['name']!,
-                        style: ShadTheme.of(context).textTheme.p,
-                      ),
-                      Text(
-                        currencyInfo['region']!,
-                        style: ShadTheme.of(context).textTheme.small.copyWith(
-                              color: ShadTheme.of(context)
-                                  .colorScheme
-                                  .mutedForeground,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Sample amount
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      CurrencyFormatter.format(100, currency: currencyCode),
-                      style: ShadTheme.of(context).textTheme.p.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
                     ),
+
+                    // Check icon or sample amount
                     if (isSelected)
                       Icon(
                         Icons.check_circle,
-                        color: AppColors.success,
+                        color: AppColors.primary,
                         size: 20,
                       )
                     else if (_isLoading)
                       const SizedBox(
-                        width: 16,
-                        height: 16,
+                        width: 20,
+                        height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      Text(
+                        CurrencyFormatter.format(100, currency: currencyCode),
+                        style: theme.textTheme.small.copyWith(
+                          color: theme.colorScheme.mutedForeground,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -474,24 +239,20 @@ class _CurrencySettingsScreenState
 
       if (mounted) {
         ShadSonner.of(context).show(
-          ShadToast.raw(
-            variant: ShadToastVariant.primary,
+          ShadToast(
             description:
-                Text('settings.currencyChanged'.tr(args: [currencyCode])),
+                Text('currencies.changeSuccess'.tr(args: [currencyCode])),
             backgroundColor: AppColors.success,
           ),
         );
 
-        // Navigate back after successful change
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
         ShadSonner.of(context).show(
-          ShadToast.raw(
-            variant: ShadToastVariant.primary,
-            description:
-                Text('settings.currencyChangeError'.tr(args: [e.toString()])),
+          ShadToast.destructive(
+            description: Text('currencies.changeError'.tr()),
             backgroundColor: AppColors.error,
           ),
         );

@@ -34,8 +34,6 @@ class NavigationShell extends StatelessWidget {
       RouteNames.register,
       RouteNames.forgotPassword,
       RouteNames.resetPassword,
-      RouteNames.error,
-      RouteNames.notFound,
     ];
 
     // Hide on auth routes
@@ -45,7 +43,6 @@ class NavigationShell extends StatelessWidget {
 
     // Hide on modal routes
     final modalRoutes = [
-      RouteNames.quickAdd,
       RouteNames.calculator,
       RouteNames.currencyConverter,
       RouteNames.scanner,

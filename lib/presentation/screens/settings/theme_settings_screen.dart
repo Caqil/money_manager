@@ -22,27 +22,27 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
   bool _isLoading = false;
 
   // Theme options data
-  static const List<Map<String, dynamic>> _themeOptions = [
+  static final List<Map<String, dynamic>> _themeOptions = [
     {
       'mode': ThemeMode.system,
-      'name': 'System',
-      'description': 'Follow system theme',
+      'name': 'settings.system'.tr(),
+      'description': 'settings.systemDescription'.tr(),
       'icon': Icons.brightness_auto,
       'primaryColor': Colors.blue,
       'backgroundColor': Colors.grey,
     },
     {
       'mode': ThemeMode.light,
-      'name': 'Light',
-      'description': 'Light theme for daytime use',
+      'name': 'settings.light'.tr(),
+      'description': 'settings.lightDescription'.tr(),
       'icon': Icons.light_mode,
       'primaryColor': Colors.orange,
       'backgroundColor': Colors.white,
     },
     {
       'mode': ThemeMode.dark,
-      'name': 'Dark',
-      'description': 'Dark theme for nighttime use',
+      'name': 'settings.dark'.tr(),
+      'description': 'settings.darkDescription'.tr(),
       'icon': Icons.dark_mode,
       'primaryColor': Colors.purple,
       'backgroundColor': Colors.black,
@@ -158,13 +158,11 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'settings.${currentOption['name'].toLowerCase()}'
-                              .tr(),
+                          currentOption['name'],
                           style: theme.textTheme.h4,
                         ),
                         Text(
-                          'settings.${currentOption['name'].toLowerCase()}Description'
-                              .tr(),
+                          currentOption['description'],
                           style: theme.textTheme.small.copyWith(
                             color: theme.colorScheme.mutedForeground,
                           ),
@@ -349,15 +347,14 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'settings.${option['name'].toLowerCase()}'.tr(),
+                        option['name'],
                         style: ShadTheme.of(context).textTheme.large.copyWith(
                               fontWeight: FontWeight.w600,
                               color: isSelected ? option['primaryColor'] : null,
                             ),
                       ),
                       Text(
-                        'settings.${option['name'].toLowerCase()}Description'
-                            .tr(),
+                        option['description'],
                         style: ShadTheme.of(context).textTheme.p,
                       ),
                     ],
@@ -420,7 +417,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           icon: Icons.speed,
           title: 'settings.animationSpeed'.tr(),
           subtitle: 'settings.animationSpeedDescription'.tr(),
-          value: 'Normal', // This would come from settings
+          value: 'settings.animationSpeedNormal'
+              .tr(), // This would come from settings
           onTap: _configureAnimationSpeed,
           enabled: !_isLoading,
         ),
@@ -444,7 +442,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           icon: Icons.text_fields,
           title: 'settings.fontSize'.tr(),
           subtitle: 'settings.fontSizeDescription'.tr(),
-          value: 'Medium', // This would come from settings
+          value:
+              'settings.fontSizeMedium'.tr(), // This would come from settings
           onTap: _configureFontSize,
           enabled: !_isLoading,
         ),
@@ -452,7 +451,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           icon: Icons.font_download,
           title: 'settings.fontFamily'.tr(),
           subtitle: 'settings.fontFamilyDescription'.tr(),
-          value: 'System Default', // This would come from settings
+          value: 'settings.fontFamilySystemDefault'
+              .tr(), // This would come from settings
           onTap: _configureFontFamily,
           enabled: !_isLoading,
         ),
@@ -460,7 +460,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           icon: Icons.palette,
           title: 'settings.accentColor'.tr(),
           subtitle: 'settings.accentColorDescription'.tr(),
-          value: 'Blue', // This would come from settings
+          value:
+              'settings.accentColorBlue'.tr(), // This would come from settings
           onTap: _configureAccentColor,
           enabled: !_isLoading,
           trailing: Container(
@@ -488,7 +489,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           icon: Icons.border_style,
           title: 'settings.borderRadius'.tr(),
           subtitle: 'settings.borderRadiusDescription'.tr(),
-          value: 'Medium', // This would come from settings
+          value: 'settings.borderRadiusMedium'
+              .tr(), // This would come from settings
           onTap: _configureBorderRadius,
           enabled: !_isLoading,
         ),
@@ -554,7 +556,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
         ShadSonner.of(context).show(
           ShadToast.raw(
               variant: ShadToastVariant.primary,
-              description: Text('Failed to update chart animations: $e')),
+              description: Text('settings.chartAnimationsUpdateError'
+                  .tr(namedArgs: {'error': e.toString()}))),
         );
       }
     } finally {
@@ -567,8 +570,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description:
-              Text('Smooth animations ${enabled ? 'enabled' : 'disabled'}')),
+          description: Text('settings.smoothAnimationsToggleMessage'
+              .tr(namedArgs: {'status': enabled ? 'enabled' : 'disabled'}))),
     );
   }
 
@@ -577,7 +580,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description: Text('Configure animation speed')),
+          description: Text('settings.configureAnimationSpeed'.tr())),
     );
   }
 
@@ -586,8 +589,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description:
-              Text('Reduce motion ${enabled ? 'enabled' : 'disabled'}')),
+          description: Text('settings.reduceMotionToggleMessage'
+              .tr(namedArgs: {'status': enabled ? 'enabled' : 'disabled'}))),
     );
   }
 
@@ -596,7 +599,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description: Text('Configure font size')),
+          description: Text('settings.configureFontSize'.tr())),
     );
   }
 
@@ -605,7 +608,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description: Text('Configure font family')),
+          description: Text('settings.configureFontFamily'.tr())),
     );
   }
 
@@ -614,7 +617,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description: Text('Configure accent color')),
+          description: Text('settings.configureAccentColor'.tr())),
     );
   }
 
@@ -623,8 +626,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description:
-              Text('High contrast ${enabled ? 'enabled' : 'disabled'}')),
+          description: Text('settings.highContrastToggleMessage'
+              .tr(namedArgs: {'status': enabled ? 'enabled' : 'disabled'}))),
     );
   }
 
@@ -633,7 +636,7 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
     ShadSonner.of(context).show(
       ShadToast.raw(
           variant: ShadToastVariant.primary,
-          description: Text('Configure border radius')),
+          description: Text('settings.configureBorderRadius'.tr())),
     );
   }
 
@@ -678,7 +681,8 @@ class _ThemeSettingsScreenState extends ConsumerState<ThemeSettingsScreen> {
           ShadSonner.of(context).show(
             ShadToast.raw(
                 variant: ShadToastVariant.primary,
-                description: Text('Failed to reset theme: $e')),
+                description: Text('settings.themeResetError'
+                    .tr(namedArgs: {'error': e.toString()}))),
           );
         }
       } finally {

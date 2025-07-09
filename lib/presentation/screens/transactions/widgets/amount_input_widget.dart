@@ -53,7 +53,6 @@ class _AmountInputWidgetState extends ConsumerState<AmountInputWidget> {
   final FocusNode _focusNode = FocusNode();
 
   String? _validationError;
-  bool _isCalculatorVisible = false;
   double? _currentAmount;
 
   @override

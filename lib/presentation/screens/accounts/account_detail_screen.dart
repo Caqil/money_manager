@@ -63,7 +63,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
         ),
         body: Center(
           child: CustomErrorWidget(
-            title: 'Error loading account',
+            title: 'accounts.errorLoading'.tr(),
             message: error.toString(),
             actionText: 'common.retry'.tr(),
             onActionPressed: () =>
@@ -78,10 +78,10 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
               title: 'accounts.accountDetails'.tr(),
               showBackButton: true,
             ),
-            body: const Center(
+            body: Center(
               child: EmptyStateWidget(
-                title: 'Account not found',
-                message: 'The requested account could not be found.',
+                title: 'accounts.notFound'.tr(),
+                message: 'accounts.notFoundMessage'.tr(),
               ),
             ),
           );
@@ -123,7 +123,9 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
                           size: 16,
                         ),
                         const SizedBox(width: AppDimensions.spacingS),
-                        Text(account.isActive ? 'Deactivate' : 'Activate'),
+                        Text(account.isActive
+                            ? 'accounts.deactivate'.tr()
+                            : 'accounts.activate'.tr()),
                       ],
                     ),
                   ),
@@ -171,7 +173,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
                             const Icon(Icons.add,
                                 size: 16, color: AppColors.success),
                             const SizedBox(width: AppDimensions.spacingS),
-                            Text('Add Income'),
+                            Text('accounts.addIncome'.tr()),
                           ],
                         ),
                       ),
@@ -187,7 +189,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
                             const Icon(Icons.remove,
                                 size: 16, color: AppColors.error),
                             const SizedBox(width: AppDimensions.spacingS),
-                            Text('Add Expense'),
+                            Text('accounts.addExpense'.tr()),
                           ],
                         ),
                       ),
@@ -202,7 +204,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
                             const Icon(Icons.swap_horiz,
                                 size: 16, color: AppColors.primary),
                             const SizedBox(width: AppDimensions.spacingS),
-                            Text('Transfer'),
+                            Text('accounts.transfer'.tr()),
                           ],
                         ),
                       ),
@@ -230,10 +232,10 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
                   ),
                   labelColor: Colors.white,
                   unselectedLabelColor: theme.colorScheme.foreground,
-                  tabs: const [
-                    Tab(text: 'Transactions'),
-                    Tab(text: 'Details'),
-                    Tab(text: 'Analytics'),
+                  tabs: [
+                    Tab(text: 'transactions.title'.tr()),
+                    Tab(text: 'accounts.details'.tr()),
+                    Tab(text: 'accounts.analytics'.tr()),
                   ],
                 ),
               ),
@@ -269,7 +271,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
       ),
       error: (error, _) => Center(
         child: CustomErrorWidget(
-          title: 'Error loading transactions',
+          title: 'accounts.errorLoadingTransactions'.tr(),
           message: error.toString(),
           actionText: 'common.retry'.tr(),
           onActionPressed: () =>
@@ -305,7 +307,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
                       size: 20,
                     ),
                   ),
-                  title: Text('Transaction'),
+                  title: Text('transactions.transaction'.tr()),
                   subtitle: Text(
                     DateFormat('MMM dd, yyyy').format(transaction.date),
                   ),
@@ -341,31 +343,38 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Account Information',
+                  'accounts.accountInformation'.tr(),
                   style: theme.textTheme.h3,
                 ),
                 const SizedBox(height: AppDimensions.spacingM),
-                _buildDetailRow('Name', account.name),
+                _buildDetailRow('accounts.name'.tr(), account.name),
+                _buildDetailRow('accounts.type'.tr(),
+                    'accounts.types.${account.type.name}'.tr()),
+                _buildDetailRow('common.currency'.tr(), account.currency),
                 _buildDetailRow(
-                    'Type', 'accounts.types.${account.type.name}'.tr()),
-                _buildDetailRow('Currency', account.currency),
+                    'accounts.status'.tr(),
+                    account.isActive
+                        ? 'accounts.active'.tr()
+                        : 'accounts.inactive'.tr()),
                 _buildDetailRow(
-                    'Status', account.isActive ? 'Active' : 'Inactive'),
-                _buildDetailRow(
-                    'Include in Total', account.includeInTotal ? 'Yes' : 'No'),
+                    'accounts.includeInTotal'.tr(),
+                    account.includeInTotal
+                        ? 'common.yes'.tr()
+                        : 'common.no'.tr()),
                 if (account.description != null)
-                  _buildDetailRow('Description', account.description!),
-                if (account.bankName != null)
-                  _buildDetailRow('Bank', account.bankName!),
-                if (account.accountNumber != null)
                   _buildDetailRow(
-                      'Account Number', '••••${account.accountNumber}'),
+                      'accounts.description'.tr(), account.description!),
+                if (account.bankName != null)
+                  _buildDetailRow('accounts.bank'.tr(), account.bankName!),
+                if (account.accountNumber != null)
+                  _buildDetailRow('accounts.accountNumber'.tr(),
+                      '••••${account.accountNumber}'),
                 if (account.creditLimit != null)
-                  _buildDetailRow('Credit Limit',
+                  _buildDetailRow('accounts.creditLimit'.tr(),
                       _formatCurrency(account.creditLimit!, account.currency)),
-                _buildDetailRow('Created',
+                _buildDetailRow('accounts.created'.tr(),
                     DateFormat('MMM dd, yyyy').format(account.createdAt)),
-                _buildDetailRow('Last Updated',
+                _buildDetailRow('accounts.lastUpdated'.tr(),
                     DateFormat('MMM dd, yyyy').format(account.updatedAt)),
               ],
             ),
@@ -376,10 +385,10 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
   }
 
   Widget _buildAnalyticsTab(Account account) {
-    return const Center(
+    return Center(
       child: ComingSoonEmptyState(
-        title: 'Analytics Coming Soon',
-        message: 'Account analytics and insights will be available here.',
+        title: 'accounts.analyticsComingSoonTitle'.tr(),
+        message: 'accounts.analyticsComingSoonMessage'.tr(),
       ),
     );
   }
@@ -449,8 +458,9 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
       final sonner = ShadSonner.of(context);
       sonner.show(
         ShadToast(
-          description: Text(
-              account.isActive ? 'Account deactivated' : 'Account activated'),
+          description: Text(account.isActive
+              ? 'accounts.deactivatedSuccess'.tr()
+              : 'accounts.activatedSuccess'.tr()),
         ),
       );
     }
@@ -460,9 +470,8 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
     showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Delete Account',
-        message:
-            'Are you sure you want to delete "${account.name}"? This action cannot be undone.',
+        title: 'accounts.deleteTitle'.tr(),
+        message: 'accounts.deleteConfirm'.tr(args: [account.name]),
         destructive: true,
         confirmText: 'common.delete'.tr(),
         cancelText: 'common.cancel'.tr(),
@@ -482,7 +491,7 @@ class _AccountDetailScreenState extends ConsumerState<AccountDetailScreen>
     if (success && mounted) {
       final sonner = ShadSonner.of(context);
       sonner.show(ShadToast(
-        description: Text('Account deleted successfully'),
+        description: Text('accounts.deleteSuccessMessage'.tr()),
       ));
 
       context.go('/accounts');

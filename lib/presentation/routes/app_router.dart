@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:money_manager/presentation/pages/main/main_layout.dart';
 import 'package:money_manager/presentation/screens/error/error_page.dart';
 
-// Import all your screen files (you'll need to create these)
+// Import all your screen files
 import '../screens/accounts/account_details_screen.dart';
 import '../screens/accounts/account_transactions_screen.dart';
 import '../screens/accounts/transfer_funds_screen.dart';
@@ -24,7 +24,7 @@ import '../screens/accounts/add_edit_account_screen.dart';
 
 import '../screens/transactions/add_expense_screen.dart';
 import '../screens/transactions/add_income_screen.dart';
-import '../screens/transactions/dd_transfer_screen.dart';
+import '../screens/transactions/add_transfer_screen.dart';
 import '../screens/transactions/duplicate_transaction_screen.dart';
 import '../screens/transactions/receipt_view_screen.dart';
 import '../screens/transactions/transaction_detail_screen.dart';
@@ -60,8 +60,10 @@ import '../screens/transactions/voice_input_screen.dart';
 import 'route_names.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // FIXED: Only watch specific values that affect routing, not the entire state
+  // This prevents rebuilds when settings are loading/updating
   final authState = ref.watch(authStateProvider);
-  final settingsState = ref.watch(settingsStateProvider);
+  final isFirstLaunch = ref.watch(isFirstLaunchProvider);
 
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -77,10 +79,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       print('🧭 Router Redirect Check:');
       print('  Current: $currentLocation');
       print('  IsInMainApp: $isInMainApp');
-      print('  FirstLaunch: ${settingsState.isFirstLaunch}');
+      print('  FirstLaunch: $isFirstLaunch');
       print('  Auth: ${authState.isAuthenticated}');
 
-      // IMPORTANT: Let splash handle its own navigation
+      // IMPORTANT: Let splash handle its own navigation - no redirects from splash
       if (currentLocation == RouteNames.splash) {
         print('🎯 At splash - no redirect');
         return null;
@@ -94,13 +96,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // FIXED: Don't redirect if user is already using the main app
       // This prevents the settings action issue
-      if (isInMainApp && !settingsState.isLoading) {
+      if (isInMainApp) {
         print('🎯 In main app - no redirect needed');
         return null;
       }
 
       // Only redirect TO onboarding if first launch AND not in main app
-      if (settingsState.isFirstLaunch &&
+      if (isFirstLaunch &&
           !isInMainApp &&
           currentLocation != RouteNames.onboarding &&
           currentLocation != RouteNames.splash) {
@@ -215,26 +217,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: 'add',
                 name: 'add-transaction',
                 builder: (context, state) => const AddEditTransactionScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'income',
-                    name: 'add-income',
-                    builder: (context, state) => const AddIncomeScreen(),
-                  ),
-                  GoRoute(
-                    path: 'expense',
-                    name: 'add-expense',
-                    builder: (context, state) => const AddExpenseScreen(),
-                  ),
-                  GoRoute(
-                    path: 'transfer',
-                    name: 'add-transfer',
-                    builder: (context, state) => const AddTransferScreen(),
-                  ),
-                ],
               ),
               GoRoute(
-                path: 'voice-input',
+                path: 'add-income',
+                name: 'add-income',
+                builder: (context, state) => const AddIncomeScreen(),
+              ),
+              GoRoute(
+                path: 'add-expense',
+                name: 'add-expense',
+                builder: (context, state) => const AddExpenseScreen(),
+              ),
+              // GoRoute(
+              //   path: 'transfer',
+              //   name: 'dd-transfer',
+              //   builder: (context, state) => const DdTransferScreen(),
+              // ),
+              GoRoute(
+                path: 'voice',
                 name: 'voice-input',
                 builder: (context, state) => const VoiceInputScreen(),
               ),
@@ -280,58 +280,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Analytics Routes
-          GoRoute(
-            path: RouteNames.analytics,
-            name: 'analytics',
-            builder: (context, state) => const AnalyticsScreen(),
-            routes: [
-              GoRoute(
-                path: 'income-expense',
-                name: 'income-expense-analytics',
-                builder: (context, state) =>
-                    const IncomeExpenseAnalyticsScreen(),
-              ),
-              GoRoute(
-                path: 'categories',
-                name: 'category-analytics',
-                builder: (context, state) => const CategoryAnalyticsScreen(),
-              ),
-              GoRoute(
-                path: 'monthly',
-                name: 'monthly-analytics',
-                builder: (context, state) => const MonthlyAnalyticsScreen(),
-              ),
-              GoRoute(
-                path: 'yearly',
-                name: 'yearly-analytics',
-                builder: (context, state) => const YearlyAnalyticsScreen(),
-              ),
-              GoRoute(
-                path: 'custom',
-                name: 'custom-analytics',
-                builder: (context, state) => const CustomAnalyticsScreen(),
-              ),
-              GoRoute(
-                path: 'financial-health',
-                name: 'financial-health',
-                builder: (context, state) => const FinancialHealthScreen(),
-              ),
-              // GoRoute(
-              //   path: 'export',
-              //   name: 'export-data',
-              //   builder: (context, state) => const ExportDataScreen(),
-              // ),
-            ],
-          ),
-
-          // More/Settings Section
-          GoRoute(
-            path: RouteNames.more,
-            name: 'more',
-            redirect: (context, state) => RouteNames.settings,
-          ),
-
           // Category Routes
           GoRoute(
             path: RouteNames.categories,
@@ -343,24 +291,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'add-category',
                 builder: (context, state) => const AddEditCategoryScreen(),
               ),
-              // GoRoute(
-              //   path: ':categoryId',
-              //   name: 'category-details',
-              //   builder: (context, state) {
-              //     final categoryId = state.pathParameters['categoryId']!;
-              //     return CategoryDetailsScreen(categoryId: categoryId);
-              //   },
-              //   routes: [
-              //     GoRoute(
-              //       path: 'edit',
-              //       name: 'edit-category',
-              //       builder: (context, state) {
-              //         final categoryId = state.pathParameters['categoryId']!;
-              //         return AddEditCategoryScreen(categoryId: categoryId);
-              //       },
-              //     ),
-              //   ],
-              // ),
+              GoRoute(
+                path: ':categoryId/edit',
+                name: 'edit-category',
+                builder: (context, state) {
+                  final categoryId = state.pathParameters['categoryId']!;
+                  return AddEditCategoryScreen(categoryId: categoryId);
+                },
+              ),
             ],
           ),
 
@@ -375,24 +313,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'add-budget',
                 builder: (context, state) => const AddEditBudgetScreen(),
               ),
-              // GoRoute(
-              //   path: ':budgetId',
-              //   name: 'budget-details',
-              //   builder: (context, state) {
-              //     final budgetId = state.pathParameters['budgetId']!;
-              //     return BudgetDetailsScreen(budgetId: budgetId);
-              //   },
-              //   routes: [
-              //     GoRoute(
-              //       path: 'edit',
-              //       name: 'edit-budget',
-              //       builder: (context, state) {
-              //         final budgetId = state.pathParameters['budgetId']!;
-              //         return AddEditBudgetScreen(budgetId: budgetId);
-              //       },
-              //     ),
-              //   ],
-              // ),
+              GoRoute(
+                path: ':budgetId/edit',
+                name: 'edit-budget',
+                builder: (context, state) {
+                  final budgetId = state.pathParameters['budgetId']!;
+                  return AddEditBudgetScreen(budgetId: budgetId);
+                },
+              ),
             ],
           ),
 
@@ -408,44 +336,57 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           //       builder: (context, state) => const AddEditGoalScreen(),
           //     ),
           //     GoRoute(
-          //       path: ':goalId',
-          //       name: 'goal-details',
+          //       path: ':goalId/edit',
+          //       name: 'edit-goal',
           //       builder: (context, state) {
           //         final goalId = state.pathParameters['goalId']!;
-          //         return GoalDetailsScreen(goalId: goalId);
-          //       },
-          //       routes: [
-          //         GoRoute(
-          //           path: 'edit',
-          //           name: 'edit-goal',
-          //           builder: (context, state) {
-          //             final goalId = state.pathParameters['goalId']!;
-          //             return AddEditGoalScreen(goalId: goalId);
-          //           },
-          //         ),
-          //       ],
-          //     ),
-          //   ],
-          // ),
-
-          // Achievement Routes
-          // GoRoute(
-          //   path: RouteNames.achievements,
-          //   name: 'achievements',
-          //   builder: (context, state) => const AchievementListScreen(),
-          //   routes: [
-          //     GoRoute(
-          //       path: ':achievementId',
-          //       name: 'achievement-details',
-          //       builder: (context, state) {
-          //         final achievementId = state.pathParameters['achievementId']!;
-          //         return AchievementDetailsScreen(achievementId: achievementId);
+          //         return AddEditGoalScreen(goalId: goalId);
           //       },
           //     ),
           //   ],
           // ),
 
-          // Split Expenses Routes
+          // Analytics Routes
+          GoRoute(
+            path: RouteNames.analytics,
+            name: 'analytics',
+            builder: (context, state) => const AnalyticsScreen(),
+            routes: [
+              GoRoute(
+                path: 'monthly',
+                name: 'monthly-analytics',
+                builder: (context, state) => const MonthlyAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'yearly',
+                name: 'yearly-analytics',
+                builder: (context, state) => const YearlyAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'categories',
+                name: 'category-analytics',
+                builder: (context, state) => const CategoryAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'income-expense',
+                name: 'income-expense-analytics',
+                builder: (context, state) =>
+                    const IncomeExpenseAnalyticsScreen(),
+              ),
+              GoRoute(
+                path: 'financial-health',
+                name: 'financial-health',
+                builder: (context, state) => const FinancialHealthScreen(),
+              ),
+              GoRoute(
+                path: 'custom',
+                name: 'custom-analytics',
+                builder: (context, state) => const CustomAnalyticsScreen(),
+              ),
+            ],
+          ),
+
+          // Split Expense Routes
           // GoRoute(
           //   path: RouteNames.splitExpenses,
           //   name: 'split-expenses',
@@ -457,62 +398,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           //       builder: (context, state) => const AddEditSplitExpenseScreen(),
           //     ),
           //     GoRoute(
-          //       path: ':expenseId',
-          //       name: 'split-expense-details',
+          //       path: ':expenseId/edit',
+          //       name: 'edit-split-expense',
           //       builder: (context, state) {
           //         final expenseId = state.pathParameters['expenseId']!;
-          //         return SplitExpenseDetailsScreen(expenseId: expenseId);
+          //         return AddEditSplitExpenseScreen(expenseId: expenseId);
           //       },
-          //       routes: [
-          //         GoRoute(
-          //           path: 'edit',
-          //           name: 'edit-split-expense',
-          //           builder: (context, state) {
-          //             final expenseId = state.pathParameters['expenseId']!;
-          //             return AddEditSplitExpenseScreen(expenseId: expenseId);
-          //           },
-          //         ),
-          //       ],
           //     ),
           //   ],
           // ),
 
-          // Recurring Transactions Routes
-          GoRoute(
-            path: RouteNames.recurringTransactions,
-            name: 'recurring-transactions',
-            builder: (context, state) => const RecurringTransactionListScreen(),
-            routes: [
-              GoRoute(
-                path: 'add',
-                name: 'add-recurring-transaction',
-                builder: (context, state) =>
-                    const AddEditRecurringTransactionScreen(),
-              ),
-              // GoRoute(
-              //   path: ':recurringId',
-              //   name: 'recurring-transaction-details',
-              //   builder: (context, state) {
-              //     final recurringId = state.pathParameters['recurringId']!;
-              //     return RecurringTransactionDetailsScreen(
-              //         recurringId: recurringId);
-              //   },
-              //   routes: [
-              //     GoRoute(
-              //       path: 'edit',
-              //       name: 'edit-recurring-transaction',
-              //       builder: (context, state) {
-              //         final recurringId = state.pathParameters['recurringId']!;
-              //         return AddEditRecurringTransactionScreen(
-              //             recurringId: recurringId);
-              //       },
-              //     ),
-              //   ],
-              // ),
-            ],
-          ),
+          // // Recurring Transaction Routes
+          // GoRoute(
+          //   path: RouteNames.recurring,
+          //   name: 'recurring',
+          //   builder: (context, state) => const RecurringTransactionListScreen(),
+          //   routes: [
+          //     GoRoute(
+          //       path: 'add',
+          //       name: 'add-recurring',
+          //       builder: (context, state) =>
+          //           const AddEditRecurringTransactionScreen(),
+          //     ),
+          //     GoRoute(
+          //       path: ':recurringId/edit',
+          //       name: 'edit-recurring',
+          //       builder: (context, state) {
+          //         final recurringId = state.pathParameters['recurringId']!;
+          //         return AddEditRecurringTransactionScreen(
+          //             recurringId: recurringId);
+          //       },
+          //     ),
+          //   ],
+          // ),
 
-          // Settings & Profile Routes
+          // Settings Routes
           GoRoute(
             path: RouteNames.settings,
             name: 'settings',
@@ -543,6 +463,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 name: 'language-settings',
                 builder: (context, state) => const LanguageSettingsScreen(),
               ),
+              // Commented out until screens are created
               // GoRoute(
               //   path: 'data',
               //   name: 'data-settings',
@@ -553,129 +474,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               //   name: 'about-app',
               //   builder: (context, state) => const AboutAppScreen(),
               // ),
-              // GoRoute(
-              //   path: 'privacy',
-              //   name: 'privacy-policy',
-              //   builder: (context, state) => const PrivacyPolicyScreen(),
-              // ),
-              // GoRoute(
-              //   path: 'terms',
-              //   name: 'terms-of-service',
-              //   builder: (context, state) => const TermsOfServiceScreen(),
-              // ),
             ],
           ),
-
-          // Profile Routes
-          // GoRoute(
-          //   path: RouteNames.profile,
-          //   name: 'profile',
-          //   builder: (context, state) => const ProfileScreen(),
-          //   routes: [
-          //     GoRoute(
-          //       path: 'edit',
-          //       name: 'edit-profile',
-          //       builder: (context, state) => const EditProfileScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: 'change-password',
-          //       name: 'change-password',
-          //       builder: (context, state) => const ChangePasswordScreen(),
-          //     ),
-          //   ],
-          // ),
-
-          // Backup Routes
-          // GoRoute(
-          //   path: RouteNames.backup,
-          //   name: 'backup',
-          //   builder: (context, state) => const BackupScreen(),
-          //   routes: [
-          //     GoRoute(
-          //       path: 'restore',
-          //       name: 'backup-restore',
-          //       builder: (context, state) => const BackupRestoreScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: 'history',
-          //       name: 'backup-history',
-          //       builder: (context, state) => const BackupHistoryScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: 'export',
-          //       name: 'data-export',
-          //       builder: (context, state) => const DataExportScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: 'import',
-          //       name: 'data-import',
-          //       builder: (context, state) => const DataImportScreen(),
-          //     ),
-          //   ],
-          // ),
-
-          // Help & Support Routes
-          // GoRoute(
-          //   path: RouteNames.help,
-          //   name: 'help',
-          //   builder: (context, state) => const HelpScreen(),
-          //   routes: [
-          //     GoRoute(
-          //       path: 'contact',
-          //       name: 'contact',
-          //       builder: (context, state) => const ContactScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: 'feedback',
-          //       name: 'feedback',
-          //       builder: (context, state) => const FeedbackScreen(),
-          //     ),
-          //     GoRoute(
-          //       path: ':topicId',
-          //       name: 'help-topic',
-          //       builder: (context, state) {
-          //         final topicId = state.pathParameters['topicId']!;
-          //         return HelpTopicScreen(topicId: topicId);
-          //       },
-          //     ),
-          //   ],
-          // ),
         ],
       ),
-
-      // Modal/Overlay Routes (outside of shell)
-      // GoRoute(
-      //   path: RouteNames.quickAdd,
-      //   name: 'quick-add',
-      //   builder: (context, state) => const QuickAddScreen(),
-      // ),
-      // GoRoute(
-      //   path: RouteNames.calculator,
-      //   name: 'calculator',
-      //   builder: (context, state) => const CalculatorScreen(),
-      // ),
-      // GoRoute(
-      //   path: RouteNames.currencyConverter,
-      //   name: 'currency-converter',
-      //   builder: (context, state) => const CurrencyConverterScreen(),
-      // ),
-      // GoRoute(
-      //   path: RouteNames.scanner,
-      //   name: 'scanner',
-      //   builder: (context, state) => const ScannerScreen(),
-      // ),
-
-      // // Error Routes
-      // GoRoute(
-      //   path: RouteNames.notFound,
-      //   name: 'not-found',
-      //   builder: (context, state) => const NotFoundScreen(),
-      // ),
-      // GoRoute(
-      //   path: RouteNames.error,
-      //   name: 'error',
-      //   builder: (context, state) => const ErrorScreen(),
-      // ),
     ],
   );
 });

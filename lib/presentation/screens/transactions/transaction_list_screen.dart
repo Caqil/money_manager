@@ -4,17 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'dart:async';
 
 import '../../../core/constants/colors.dart';
 import '../../../core/constants/dimensions.dart';
-import '../../../core/utils/currency_formatter.dart';
 import '../../../data/models/transaction.dart';
 import '../../providers/transaction_provider.dart';
-import '../../providers/settings_provider.dart';
 import '../../widgets/common/custom_app_bar.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/common/error_widget.dart';
-import '../../widgets/common/loading_widget.dart';
 import 'widgets/transaction_item.dart';
 import 'widgets/transaction_filters.dart';
 
@@ -42,6 +40,18 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
   bool _isSelectionMode = false;
   Set<String> _selectedTransactions = {};
   String _searchQuery = '';
+  Timer? _searchDebounceTimer;
+
+  // Cache for search results
+  List<Transaction>? _cachedTransactions;
+  String _cachedSearchQuery = '';
+  List<Transaction>? _cachedFilteredResults;
+
+  // Pagination
+  static const int _pageSize = 50;
+  int _currentPage = 0;
+  bool _hasMoreData = true;
+  final ScrollController _scrollController = ScrollController();
 
   // FIXED: Add controllers for ShadPopover
   final ShadPopoverController _moreActionsController = ShadPopoverController();
@@ -49,6 +59,9 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
   @override
   void initState() {
     super.initState();
+
+    // Initialize scroll listener for pagination
+    _scrollController.addListener(_onScroll);
 
     // Initialize filters based on parameters
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,6 +93,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
     _tabController?.removeListener(_onTabChanged);
     _tabController?.dispose();
     _moreActionsController.dispose(); // FIXED: Dispose controller
+    _searchDebounceTimer?.cancel(); // Dispose search timer
+    _scrollController.dispose(); // Dispose scroll controller
     super.dispose();
   }
 
@@ -105,10 +120,24 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
     }
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        _hasMoreData) {
+      _loadMoreTransactions();
+    }
+  }
+
+  void _loadMoreTransactions() {
+    if (_hasMoreData) {
+      setState(() {
+        _currentPage++;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-
     return Scaffold(
       appBar: CustomAppBar(
         title: _isSelectionMode
@@ -166,7 +195,7 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
               ),
               tooltip: 'transactions.filters.all'.tr(),
             ),
-            // FIXED: Add controller to ShadPopover
+            // FIXED: Use controller only (not both controller and visible)
             ShadPopover(
               controller: _moreActionsController,
               popover: (context) => _buildMoreActionsMenu(),
@@ -290,74 +319,137 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
 
   Widget _buildLoadingState() {
     return const Center(
-      child: ShimmerLoading(
-        child: Column(
-          children: [
-            SizedBox(height: AppDimensions.spacingL),
-            SkeletonLoader(height: 80, width: double.infinity),
-            SizedBox(height: AppDimensions.spacingM),
-            SkeletonLoader(height: 80, width: double.infinity),
-            SizedBox(height: AppDimensions.spacingM),
-            SkeletonLoader(height: 80, width: double.infinity),
-          ],
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: AppDimensions.spacingM),
+          Text('Loading transactions...'),
+        ],
       ),
     );
   }
 
   Widget _buildErrorState(Object error) {
+    // More detailed error debugging
+    print('🔴 Transaction List Error: $error');
+    print('🔴 Error type: ${error.runtimeType}');
+
+    String errorMessage = error.toString();
+    String actionText = 'common.retry'.tr();
+
+    // Provide more specific error messages based on error type
+    if (error.toString().contains('Failed to get transactions')) {
+      errorMessage =
+          'Database error: Unable to load transactions. Please try restarting the app.';
+    } else if (error.toString().contains('Box') &&
+        error.toString().contains('not open')) {
+      errorMessage = 'Database not initialized. Please restart the app.';
+    } else if (error.toString().contains('type')) {
+      errorMessage = 'Data format error. Please clear app data or reinstall.';
+    }
+
     return Center(
       child: CustomErrorWidget(
         title: 'errors.loadingTransactions'.tr(),
-        message: error.toString(),
-        actionText: 'common.retry'.tr(),
-        onActionPressed: () => ref.invalidate(transactionListProvider),
+        message: errorMessage,
+        actionText: actionText,
+        onActionPressed: () {
+          print('🔄 Retrying transaction load...');
+          ref.invalidate(transactionListProvider);
+        },
       ),
     );
   }
 
   Widget _buildTransactionContent(List<Transaction> transactions) {
-    // Filter by search query if applicable
-    final filteredTransactions = _searchQuery.isEmpty
-        ? transactions
-        : transactions.where((transaction) {
-            final query = _searchQuery.toLowerCase();
-            return transaction.notes?.toLowerCase().contains(query) == true;
-          }).toList();
+    // Cached search filtering for better performance
+    List<Transaction> filteredTransactions;
+
+    if (_cachedTransactions != transactions ||
+        _cachedSearchQuery != _searchQuery) {
+      // Cache miss - recalculate
+      if (_searchQuery.isEmpty) {
+        filteredTransactions = transactions;
+      } else {
+        final query = _searchQuery.toLowerCase();
+        filteredTransactions = transactions.where((transaction) {
+          return transaction.notes?.toLowerCase().contains(query) == true;
+        }).toList();
+      }
+
+      // Update cache
+      _cachedTransactions = transactions;
+      _cachedSearchQuery = _searchQuery;
+      _cachedFilteredResults = filteredTransactions;
+    } else {
+      // Cache hit - use cached results
+      filteredTransactions = _cachedFilteredResults!;
+    }
 
     if (filteredTransactions.isEmpty) {
       return _buildEmptyState();
     }
 
+    // Apply pagination for better performance
+    final displayedTransactions = _currentPage == 0
+        ? filteredTransactions.take(_pageSize).toList()
+        : filteredTransactions.take((_currentPage + 1) * _pageSize).toList();
+
+    // Update hasMoreData based on actual filtered results
+    _hasMoreData = displayedTransactions.length < filteredTransactions.length;
+
     return RefreshIndicator(
       onRefresh: () async {
+        setState(() {
+          _currentPage = 0;
+          _hasMoreData = true;
+        });
         ref.invalidate(transactionListProvider);
       },
-      child: ListView.separated(
+      child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.all(AppDimensions.paddingL),
-        itemCount: filteredTransactions.length,
-        separatorBuilder: (context, index) => const SizedBox(
-          height: AppDimensions.spacingS,
-        ),
+        itemCount: displayedTransactions.length + (_hasMoreData ? 1 : 0),
+        // Add cache extent for better performance
+        cacheExtent: 600,
         itemBuilder: (context, index) {
-          final transaction = filteredTransactions[index];
+          if (index == displayedTransactions.length) {
+            // Loading indicator for pagination
+            return const Padding(
+              padding: EdgeInsets.all(AppDimensions.paddingM),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+
+          final transaction = displayedTransactions[index];
           final isSelected = _selectedTransactions.contains(transaction.id);
 
-          return GestureDetector(
-            onLongPress: _isSelectionMode
-                ? null
-                : () => _enterSelectionModeWithTransaction(transaction.id),
-            child: TransactionItem(
-              transaction: transaction,
-              onTap: _isSelectionMode
-                  ? () => _toggleTransactionSelection(transaction.id)
-                  : () => _navigateToTransactionDetail(transaction),
-              onEdit: () => _navigateToEditTransaction(transaction),
-              onDelete: () => _showDeleteConfirmation(transaction),
-              onDuplicate: () => _navigateToDuplicateTransaction(transaction),
-              showActions: !_isSelectionMode,
-              isSelected: isSelected,
-              isSelectable: _isSelectionMode,
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index == displayedTransactions.length - 1
+                  ? 0
+                  : AppDimensions.spacingS,
+            ),
+            child: GestureDetector(
+              onLongPress: _isSelectionMode
+                  ? null
+                  : () => _enterSelectionModeWithTransaction(transaction.id),
+              child: TransactionItem(
+                key: ValueKey(transaction.id), // Add key for better performance
+                transaction: transaction,
+                onTap: _isSelectionMode
+                    ? () => _toggleTransactionSelection(transaction.id)
+                    : () => _navigateToTransactionDetail(transaction),
+                onEdit: () => _navigateToEditTransaction(transaction),
+                onDelete: () => _showDeleteConfirmation(transaction),
+                onDuplicate: () => _navigateToDuplicateTransaction(transaction),
+                showActions: !_isSelectionMode,
+                isSelected: isSelected,
+                isSelectable: _isSelectionMode,
+              ),
             ),
           );
         },
@@ -370,8 +462,8 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
       child: EmptyStateWidget(
         iconData: Icons.receipt_long_outlined,
         title: 'transactions.noTransactions'.tr(),
-        message: 'transactions.noTransactionsMessage'.tr(),
-        actionText: 'transactions.addFirstTransaction'.tr(),
+        message: 'transactions.noTransactions'.tr(),
+        actionText: 'dashboard.addFirstTransaction'.tr(),
         onActionPressed: _navigateToAddTransaction,
       ),
     );
@@ -404,10 +496,14 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
           placeholder: Text('transactions.searchTransactions'.tr()),
           autofocus: true,
           onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
+            // Debounce search input
+            _searchDebounceTimer?.cancel();
+            _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+              setState(() {
+                _searchQuery = value;
+              });
+              ref.read(transactionSearchQueryProvider.notifier).state = value;
             });
-            ref.read(transactionSearchQueryProvider.notifier).state = value;
             Navigator.of(context).pop();
           },
         ),
@@ -554,15 +650,6 @@ class _TransactionListScreenState extends ConsumerState<TransactionListScreen>
         backgroundColor: AppColors.info,
       ),
     );
-  }
-
-  // Helper methods for transaction handling
-  void _handleTransactionTap(Transaction transaction) {
-    if (_isSelectionMode) {
-      _toggleTransactionSelection(transaction.id);
-    } else {
-      _navigateToTransactionDetail(transaction);
-    }
   }
 
   bool _hasActiveFilters() {

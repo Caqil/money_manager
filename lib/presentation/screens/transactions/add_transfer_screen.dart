@@ -451,10 +451,10 @@ class _AddTransferScreenState extends ConsumerState<AddTransferScreen> {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           enabled: !_isLoading && _fromAccount != null,
           validator: (value) {
-            final error = ValidationHelper.getAmountErrorMessage(value ?? '');
+            final error = ValidationHelper.getAmountErrorMessage(value);
             if (error != null) return error;
 
-            if (_fromAccount != null && value != null) {
+            if (_fromAccount != null) {
               final amount = double.tryParse(value);
               if (amount != null && amount > _fromAccount!.availableBalance) {
                 return 'Insufficient funds in source account';

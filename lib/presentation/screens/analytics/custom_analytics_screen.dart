@@ -394,14 +394,15 @@ class _CustomAnalyticsScreenState extends ConsumerState<CustomAnalyticsScreen>
   }
 
   Widget _buildQuickStats() {
-    final customDataAsync =
-        ref.watch(customAnalyticsProvider(CustomAnalyticsParams(
-      dateRange: _selectedDateRange!,
-      accountIds: _selectedAccountIds,
-      categoryIds: _selectedCategoryIds,
-      transactionType: _selectedTransactionType,
-      timeGrouping: _timeGrouping,
-    )));
+    final customDataAsync = ref.watch(customAnalyticsProvider(
+      CustomAnalyticsParams(
+        dateRange: _selectedDateRange!,
+        accountIds: _selectedAccountIds,
+        categoryIds: _selectedCategoryIds,
+        transactionType: _selectedTransactionType,
+        timeGrouping: _timeGrouping,
+      ),
+    ));
 
     return customDataAsync.when(
       loading: () => Container(

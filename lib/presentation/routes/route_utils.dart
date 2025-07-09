@@ -72,9 +72,6 @@ class RouteUtils {
         .replaceAll(':achievementId', achievementId);
   }
 
-  static String buildHelpTopicRoute(String topicId) {
-    return RouteNames.helpTopic.replaceAll(':topicId', topicId);
-  }
 
   // Query parameter helpers
   static String buildRouteWithQuery(
@@ -159,12 +156,6 @@ class RouteUtils {
     );
   }
 
-  // Error handling
-  static void handleRouteError(BuildContext context, String error) {
-    // Log error and navigate to error page or show dialog
-    debugPrint('Route error: $error');
-    context.go(RouteNames.error);
-  }
 
   // Get current route name
   static String getCurrentRoute(BuildContext context) {

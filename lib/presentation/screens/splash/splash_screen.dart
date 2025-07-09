@@ -31,18 +31,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   bool _hasError = false;
   String? _errorMessage;
   bool _hasNavigated = false; // Prevent multiple navigations
+  bool _isInitializing = false; // Prevent multiple initializations
 
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
-    _startInitialization();
+
+    // FIXED: Use addPostFrameCallback to delay provider modification until after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_isInitializing) {
+        _startInitialization();
+      }
+    });
   }
 
   @override
   void dispose() {
     // Mark as navigated to prevent any pending operations
     _hasNavigated = true;
+    _isInitializing = false;
 
     // Dispose of animation controllers
     _backgroundController.dispose();
@@ -69,13 +77,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _startInitialization() async {
+    // FIXED: Prevent multiple initialization attempts
+    if (_isInitializing || _hasNavigated) {
+      print('⚠️ Initialization already in progress or completed, skipping...');
+      return;
+    }
+
+    _isInitializing = true;
     AppLogger.info('🚀 Starting splash initialization...');
 
     try {
       await _loadAppData();
 
       // Complete initialization - check if widget is still mounted
-      if (mounted) {
+      if (mounted && !_hasNavigated) {
         setState(() {
           _progress = 1.0;
           _currentMessage = 'splash.init.complete'.tr();
@@ -89,15 +104,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       }
     } catch (e, stackTrace) {
       AppLogger.error('❌ Splash initialization failed', e, stackTrace);
-      if (mounted) {
+      if (mounted && !_hasNavigated) {
         _handleInitializationError(e, stackTrace);
+      }
+    } finally {
+      if (mounted) {
+        _isInitializing = false;
       }
     }
   }
 
   Future<void> _loadAppData() async {
     // Step 1: Load settings (20%)
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _currentMessage = 'splash.loading.settings'.tr();
         _progress = 0.0;
@@ -106,7 +125,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     await _loadSettings();
 
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _progress = 0.2;
       });
@@ -114,7 +133,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 2: Initialize auth state (40%)
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _currentMessage = 'splash.loading.auth'.tr();
         _progress = 0.2;
@@ -123,7 +142,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     await _loadAuthState();
 
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _progress = 0.4;
       });
@@ -131,7 +150,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 3: Verify services (60%)
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _currentMessage = 'splash.loading.services'.tr();
         _progress = 0.4;
@@ -140,7 +159,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     await _verifyServices();
 
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _progress = 0.6;
       });
@@ -148,7 +167,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 4: Prepare app data (80%)
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _currentMessage = 'splash.loading.data'.tr();
         _progress = 0.6;
@@ -157,7 +176,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     await _prepareAppData();
 
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _progress = 0.8;
       });
@@ -165,7 +184,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await Future.delayed(const Duration(milliseconds: 300));
 
     // Step 5: Finalize (100%)
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _currentMessage = 'splash.loading.finalizing'.tr();
         _progress = 0.8;
@@ -174,16 +193,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     await _finalizeLoad();
 
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _progress = 1.0;
       });
     }
   }
 
-// FIXED: Add mounted check to prevent setState on disposed widget
+  // FIXED: Add mounted check to prevent setState on disposed widget
   void _handleInitializationError(Object error, StackTrace stackTrace) {
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _hasError = true;
         _errorMessage = error.toString();
@@ -194,18 +213,24 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     AppLogger.error('Splash initialization error', error, stackTrace);
   }
 
-// FIXED: Add mounted check to prevent setState on disposed widget
+  // FIXED: Add mounted check to prevent setState on disposed widget
   void _retryInitialization() {
-    if (mounted) {
+    if (mounted && !_hasNavigated) {
       setState(() {
         _hasError = false;
         _errorMessage = null;
         _progress = 0.0;
         _currentMessage = '';
         _hasNavigated = false;
+        _isInitializing = false;
       });
 
-      _startInitialization();
+      // FIXED: Use Future.microtask to ensure provider modification happens outside current frame
+      Future.microtask(() {
+        if (mounted && !_isInitializing) {
+          _startInitialization();
+        }
+      });
     }
   }
 
@@ -220,24 +245,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     try {
       print('🧭 === SPLASH NAVIGATION DECISION ===');
 
-      // Since we've already loaded settings in _loadSettings,
-      // just read the current state which should be accurate
-      final settingsState = ref.read(settingsStateProvider);
+      // Read settings state directly from SharedPreferences to avoid provider dependency
       final prefs = await SharedPreferences.getInstance();
-
-      // Use SharedPreferences as the authoritative source
-      final prefsFirstLaunch =
+      final isFirstLaunch =
           prefs.getBool(AppConstants.keyIsFirstLaunch) ?? true;
 
       print('📊 First Launch Status Check:');
-      print('  SharedPrefs: $prefsFirstLaunch');
-      print('  Provider: ${settingsState.isFirstLaunch}');
-      print('  Settings Loading: ${settingsState.isLoading}');
-
-      // Use SharedPreferences as the primary source of truth
-      final isFirstLaunch = prefsFirstLaunch;
-
-      print('📊 Final Decision: isFirstLaunch = $isFirstLaunch');
+      print('  SharedPrefs: $isFirstLaunch');
 
       // Get auth state
       final authState = ref.read(authStateProvider);
@@ -285,22 +299,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     try {
       AppLogger.info('🔧 Loading app settings...');
 
-      // Load app settings and WAIT for completion
-      final settingsNotifier = ref.read(settingsStateProvider.notifier);
-      await settingsNotifier.loadSettings();
-
-      // Verify settings are loaded by checking the state
-      final settingsState = ref.read(settingsStateProvider);
-      if (settingsState.isLoading) {
-        AppLogger.warning('⚠️ Settings still loading, waiting...');
-        // Give it more time if still loading
-        await Future.delayed(const Duration(milliseconds: 500));
+      // FIXED: Use Future.delayed instead of Future.microtask to ensure proper timing
+      await Future.delayed(const Duration(milliseconds: 100), () async {
+        // Load app settings but don't wait for the provider state change
+        final settingsNotifier = ref.read(settingsStateProvider.notifier);
         await settingsNotifier.loadSettings();
-      }
+
+        // Wait a bit more to ensure settings are persisted
+        await Future.delayed(const Duration(milliseconds: 100));
+      });
 
       AppLogger.info('✅ Settings loaded successfully');
-      print(
-          '🔍 Settings loaded: isFirstLaunch = ${settingsState.isFirstLaunch}');
     } catch (e) {
       AppLogger.error('❌ Failed to load settings', e);
       // Continue with default settings - don't fail the entire app
@@ -382,22 +391,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   color: theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppDimensions.spacingXl),
-              SizedBox(
-                width: 200,
-                child: ElevatedButton(
-                  onPressed: _retryInitialization,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.paddingM,
-                    ),
+              ElevatedButton.icon(
+                onPressed: _retryInitialization,
+                icon: const Icon(Icons.refresh),
+                label: Text('splash.error.retry'.tr()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingXl,
+                    vertical: AppDimensions.paddingM,
                   ),
-                  child: Text('splash.error.retry'.tr()),
                 ),
               ),
             ],
@@ -410,32 +416,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   Widget build(BuildContext context) {
     if (_hasError) {
-      return Scaffold(body: _buildErrorState());
+      return Scaffold(
+        body: _buildErrorState(),
+      );
     }
 
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _backgroundAnimation,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _backgroundAnimation.value ?? Colors.transparent,
-                  Colors.transparent,
-                ],
-              ),
-            ),
-            child: SplashLoadingWidget(
-              message: _currentMessage,
-              progress: _progress,
-              showProgress: true,
-              animationDuration: const Duration(milliseconds: 800),
-            ),
-          );
-        },
+      body: SplashLoadingWidget(
+        progress: _progress,
+        message: _currentMessage,
       ),
     );
   }

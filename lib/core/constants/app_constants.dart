@@ -55,6 +55,7 @@ class AppConstants {
   static const String keyLastBackup = 'last_backup';
   static const String keyNotificationsEnabled = 'notifications_enabled';
   static const String keyAutoBackupEnabled = 'auto_backup_enabled';
+  static const String keyChartAnimationsEnabled = 'chart_animations_enabled';
 
   // Default Values
   static const String defaultCurrency = 'USD';

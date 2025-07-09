@@ -36,23 +36,50 @@ class HiveService {
   // Open all required boxes with proper types
   static Future<void> _openAllBoxes() async {
     try {
+      print('📦 HiveService: Opening all boxes...');
+
       // Open typed boxes for models
       await _openTypedBox<Account>(AppConstants.hiveBoxAccounts);
+      print('✅ Opened accounts box');
+
       await _openTypedBox<Transaction>(AppConstants.hiveBoxTransactions);
+      print('✅ Opened transactions box');
+
       await _openTypedBox<Budget>(AppConstants.hiveBoxBudgets);
+      print('✅ Opened budgets box');
+
       await _openTypedBox<Goal>(AppConstants.hiveBoxGoals);
+      print('✅ Opened goals box');
+
       await _openTypedBox<Category>(AppConstants.hiveBoxCategories);
+      print('✅ Opened categories box');
+
       await _openTypedBox<RecurringTransaction>(
           AppConstants.hiveBoxRecurringTransactions);
+      print('✅ Opened recurring transactions box');
+
       await _openTypedBox<SplitExpense>(AppConstants.hiveBoxSplitExpenses);
+      print('✅ Opened split expenses box');
+
       await _openTypedBox<Badge>(AppConstants.hiveBoxBadges);
+      print('✅ Opened badges box');
 
       // Open dynamic boxes for settings and other data
       await _openDynamicBox(AppConstants.hiveBoxCurrencyRates);
+      print('✅ Opened currency rates box');
+
       await _openDynamicBox(AppConstants.hiveBoxCurrencies);
+      print('✅ Opened currencies box');
+
       await _openDynamicBox(AppConstants.hiveBoxSettings);
+      print('✅ Opened settings box');
+
       await _openDynamicBox(AppConstants.hiveBoxUserData);
+      print('✅ Opened user data box');
+
+      print('✅ HiveService: All boxes opened successfully');
     } catch (e) {
+      print('❌ HiveService: Failed to open boxes: $e');
       throw DatabaseException(message: 'Failed to open boxes: $e');
     }
   }
@@ -80,12 +107,18 @@ class HiveService {
   // Get a specific typed box
   Future<Box<T>> getBox<T>(String boxName) async {
     try {
+      print('📦 HiveService: Getting box $boxName of type ${T.toString()}');
+
       // Check if box is already open and cached
       if (_openBoxes.containsKey(boxName)) {
         final box = _openBoxes[boxName]!;
+        print('✅ HiveService: Found cached box $boxName');
         if (box is Box<T>) {
+          print(
+              '✅ HiveService: Box type matches, returning box with ${box.length} items');
           return box;
         } else {
+          print('❌ HiveService: Box type mismatch for $boxName');
           throw DatabaseException(
               message: 'Box $boxName is not of type Box<${T.toString()}>. '
                   'Actual type: ${box.runtimeType}');
@@ -94,8 +127,12 @@ class HiveService {
 
       // If box isn't cached, try to open it
       if (Hive.isBoxOpen(boxName)) {
+        print(
+            '📦 HiveService: Box $boxName is open but not cached, getting it');
         final box = Hive.box<T>(boxName);
         _openBoxes[boxName] = box;
+        print(
+            '✅ HiveService: Retrieved and cached box $boxName with ${box.length} items');
         return box;
       }
 
